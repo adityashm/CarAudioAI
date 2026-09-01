@@ -11,6 +11,7 @@ import {
   Linking,
   Image
 } from 'react-native';
+import HeroScrollSequence from '@/components/HeroScrollSequence';
 
 // --- DATASETS FOR MULTI-CAR & MULTI-EQUIPMENT ENGINE ---
 interface CarModel {
@@ -586,64 +587,10 @@ export default function AppMainScreen() {
               </Text>
 
               {/* ------------------------------------------------------------- */}
-              {/* THE CINEMATIC 4-SHOT VEO VIDEO / ANIMATION SHOWCASE           */}
+              {/* THE FRAMER MOTION SCROLLYTELLING HERO SEQUENCE                */}
               {/* ------------------------------------------------------------- */}
-              <View style={styles.cinematicPlayerCard}>
-                {/* Player Top Bar */}
-                <View style={styles.playerTopBar}>
-                  <View style={styles.playerDotGroup}>
-                    <View style={styles.dotRed} />
-                    <View style={styles.dotYellow} />
-                    <View style={styles.dotGreen} />
-                  </View>
-                  <Text style={styles.playerHUDTag}>{currentShot.hudState}</Text>
-                  <TouchableOpacity
-                    style={styles.pausePlayBtn}
-                    onPress={() => setIsVideoPlaying(!isVideoPlaying)}
-                  >
-                    <Text style={styles.pausePlayText}>{isVideoPlaying ? '⏸️ AUTO-PLAY ON' : '▶️ PAUSED'}</Text>
-                  </TouchableOpacity>
-                </View>
-
-                {/* Main 16:9 Cinematic Video Display */}
-                <View style={styles.screenFrame}>
-                  <Image
-                    source={currentShot.image}
-                    style={styles.cinematicImage}
-                    resizeMode="cover"
-                  />
-
-                  {/* Glassmorphic Caption Overlay */}
-                  <View style={styles.captionOverlay}>
-                    <View style={styles.captionHeaderRow}>
-                      <Text style={styles.captionTag}>{currentShot.tag}</Text>
-                      <Text style={styles.captionIndex}>{activeShotIdx + 1} / 4</Text>
-                    </View>
-                    <Text style={styles.captionTitle}>{currentShot.title}</Text>
-                    <Text style={styles.captionDesc}>{currentShot.desc}</Text>
-                  </View>
-                </View>
-
-                {/* Interactive Shot Scrubbing Bar */}
-                <View style={styles.shotScrubberRow}>
-                  {STORYBOARD_SHOTS.map((shot, idx) => (
-                    <TouchableOpacity
-                      key={shot.id}
-                      style={[styles.scrubberTab, activeShotIdx === idx && styles.scrubberTabActive]}
-                      onPress={() => {
-                        setActiveShotIdx(idx);
-                        setIsVideoPlaying(false);
-                      }}
-                    >
-                      <View style={[styles.scrubberDot, activeShotIdx === idx && styles.scrubberDotActive]} />
-                      <Text style={[styles.scrubberTitle, activeShotIdx === idx && styles.textCyan]}>
-                        0{idx + 1} // {shot.title.split(' ')[0]}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-
-                <View style={styles.playerBottomGlow} />
+              <View style={{ width: '100%', marginBottom: 30 }}>
+                <HeroScrollSequence onEnterStudio={() => setCurrentView('studio')} />
               </View>
 
               {/* HERO CTA BUTTONS */}

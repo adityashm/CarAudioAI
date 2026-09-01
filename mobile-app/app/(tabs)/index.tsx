@@ -8,7 +8,8 @@ import {
   Platform,
   SafeAreaView,
   StatusBar,
-  Linking
+  Linking,
+  Dimensions
 } from 'react-native';
 
 // --- DATASETS FOR MULTI-CAR & MULTI-EQUIPMENT ENGINE ---
@@ -18,6 +19,14 @@ interface CarModel {
   category: string;
   wheelbase: number;
   distances_rhd: { FL: number; FR: number; RL: number; RR: number; SUB: number };
+  cabinCoords: {
+    driver: { x: number; y: number };
+    FL: { x: number; y: number };
+    FR: { x: number; y: number };
+    RL: { x: number; y: number };
+    RR: { x: number; y: number };
+    SUB: { x: number; y: number };
+  };
 }
 
 const CAR_CATALOG: CarModel[] = [
@@ -26,42 +35,90 @@ const CAR_CATALOG: CarModel[] = [
     model: 'Kylaq (2025)',
     category: 'Compact SUV',
     wheelbase: 2566,
-    distances_rhd: { FL: 138, FR: 95, RL: 155, RR: 115, SUB: 210 }
+    distances_rhd: { FL: 138, FR: 95, RL: 155, RR: 115, SUB: 210 },
+    cabinCoords: {
+      driver: { x: 0.65, y: 0.42 },
+      FL: { x: 0.22, y: 0.35 },
+      FR: { x: 0.78, y: 0.35 },
+      RL: { x: 0.22, y: 0.68 },
+      RR: { x: 0.78, y: 0.68 },
+      SUB: { x: 0.50, y: 0.90 }
+    }
   },
   {
     make: 'Maruti Suzuki',
     model: 'Swift (2024)',
     category: 'Hatchback',
     wheelbase: 2450,
-    distances_rhd: { FL: 130, FR: 88, RL: 145, RR: 105, SUB: 190 }
+    distances_rhd: { FL: 130, FR: 88, RL: 145, RR: 105, SUB: 190 },
+    cabinCoords: {
+      driver: { x: 0.65, y: 0.40 },
+      FL: { x: 0.22, y: 0.33 },
+      FR: { x: 0.78, y: 0.33 },
+      RL: { x: 0.22, y: 0.65 },
+      RR: { x: 0.78, y: 0.65 },
+      SUB: { x: 0.50, y: 0.88 }
+    }
   },
   {
     make: 'Hyundai',
     model: 'Creta (2024)',
     category: 'Midsize SUV',
     wheelbase: 2610,
-    distances_rhd: { FL: 142, FR: 98, RL: 160, RR: 120, SUB: 220 }
+    distances_rhd: { FL: 142, FR: 98, RL: 160, RR: 120, SUB: 220 },
+    cabinCoords: {
+      driver: { x: 0.65, y: 0.42 },
+      FL: { x: 0.22, y: 0.36 },
+      FR: { x: 0.78, y: 0.36 },
+      RL: { x: 0.22, y: 0.70 },
+      RR: { x: 0.78, y: 0.70 },
+      SUB: { x: 0.50, y: 0.92 }
+    }
   },
   {
     make: 'Tata',
     model: 'Nexon (2024)',
     category: 'Compact SUV',
     wheelbase: 2498,
-    distances_rhd: { FL: 136, FR: 92, RL: 150, RR: 110, SUB: 205 }
+    distances_rhd: { FL: 136, FR: 92, RL: 150, RR: 110, SUB: 205 },
+    cabinCoords: {
+      driver: { x: 0.65, y: 0.41 },
+      FL: { x: 0.22, y: 0.35 },
+      FR: { x: 0.78, y: 0.35 },
+      RL: { x: 0.22, y: 0.68 },
+      RR: { x: 0.78, y: 0.68 },
+      SUB: { x: 0.50, y: 0.90 }
+    }
   },
   {
     make: 'Mahindra',
     model: 'Thar 4x4',
     category: 'Off-Road SUV',
     wheelbase: 2450,
-    distances_rhd: { FL: 128, FR: 85, RL: 140, RR: 100, SUB: 180 }
+    distances_rhd: { FL: 128, FR: 85, RL: 140, RR: 100, SUB: 180 },
+    cabinCoords: {
+      driver: { x: 0.65, y: 0.40 },
+      FL: { x: 0.22, y: 0.34 },
+      FR: { x: 0.78, y: 0.34 },
+      RL: { x: 0.22, y: 0.65 },
+      RR: { x: 0.78, y: 0.65 },
+      SUB: { x: 0.50, y: 0.86 }
+    }
   },
   {
     make: 'Toyota',
     model: 'Fortuner',
     category: 'Full-Size SUV',
     wheelbase: 2745,
-    distances_rhd: { FL: 155, FR: 105, RL: 180, RR: 135, SUB: 250 }
+    distances_rhd: { FL: 155, FR: 105, RL: 180, RR: 135, SUB: 250 },
+    cabinCoords: {
+      driver: { x: 0.65, y: 0.44 },
+      FL: { x: 0.22, y: 0.38 },
+      FR: { x: 0.78, y: 0.38 },
+      RL: { x: 0.22, y: 0.72 },
+      RR: { x: 0.78, y: 0.72 },
+      SUB: { x: 0.50, y: 0.94 }
+    }
   }
 ];
 
@@ -88,8 +145,10 @@ const SUBWOOFERS = [
 
 const SPEED_OF_SOUND = 34.3; // cm / ms
 
+const EQ_FREQUENCIES = [32, 63, 100, 200, 400, 630, 1000, 2000, 4000, 8000, 10000, 12000, 14000, 16000];
+
 export default function AppMainScreen() {
-  // Navigation State
+  // Navigation
   const [currentView, setCurrentView] = useState<'landing' | 'studio'>('landing');
 
   // Multi-Car & Hardware Setup State
@@ -100,12 +159,17 @@ export default function AppMainScreen() {
   const [soundProfile, setSoundProfile] = useState<'sql' | 'harman' | 'vocal'>('sql');
 
   // Studio Sub-tab State
-  const [studioTab, setStudioTab] = useState<'eq' | 'crossover' | 'time_alignment' | 'gain' | 'tones' | 'export'>('eq');
+  const [studioTab, setStudioTab] = useState<'simulation' | 'eq' | 'crossover' | 'gain' | 'tones' | 'export'>('simulation');
+  const [timeAlignmentEnabled, setTimeAlignmentEnabled] = useState<boolean>(true);
   const [isPlayingTone, setIsPlayingTone] = useState<string | null>(null);
 
-  // Audio Context Ref
+  // Audio Context Ref & Canvas Refs
   const audioCtxRef = useRef<any>(null);
   const oscRef = useRef<any>(null);
+  const soundfieldCanvasRef = useRef<any>(null);
+  const eqCanvasRef = useRef<any>(null);
+  const oscilloscopeCanvasRef = useRef<any>(null);
+  const animationFrameRef = useRef<number | null>(null);
 
   const car = CAR_CATALOG[selectedCarIdx];
   const headUnit = HEAD_UNITS[selectedHeadUnitIdx];
@@ -133,29 +197,229 @@ export default function AppMainScreen() {
   const vSub = +(Math.sqrt(sub.rms * sub.ohms)).toFixed(2);
 
   // Dynamic EQ Targets
-  const eqBands = [
-    { freq: 32, label: '32Hz', gain: soundProfile === 'sql' ? 4.0 : soundProfile === 'harman' ? 3.0 : 1.0 },
-    { freq: 63, label: '63Hz', gain: soundProfile === 'sql' ? 5.5 : soundProfile === 'harman' ? 3.0 : 1.0 },
-    { freq: 100, label: '100Hz', gain: soundProfile === 'sql' ? 2.0 : soundProfile === 'harman' ? 1.5 : 0.0 },
-    { freq: 200, label: '200Hz', gain: soundProfile === 'sql' ? -1.5 : soundProfile === 'harman' ? -1.0 : -2.0 },
-    { freq: 400, label: '400Hz', gain: 0.0 },
-    { freq: 630, label: '630Hz', gain: soundProfile === 'vocal' ? 1.0 : 0.0 },
-    { freq: 1000, label: '1kHz', gain: soundProfile === 'vocal' ? 2.0 : 0.5 },
-    { freq: 2000, label: '2kHz', gain: soundProfile === 'vocal' ? 1.5 : 1.0 },
-    { freq: 4000, label: '4kHz', gain: -1.0 },
-    { freq: 8000, label: '8kHz', gain: 1.5 },
-    { freq: 10000, label: '10kHz', gain: 1.5 },
-    { freq: 12000, label: '12kHz', gain: 2.0 },
-    { freq: 14000, label: '14kHz', gain: 1.5 },
-    { freq: 16000, label: '16kHz', gain: 1.5 }
-  ];
+  const [eqGains, setEqGains] = useState<number[]>([4.0, 5.5, 2.0, -1.5, 0.0, 0.0, 0.5, 1.0, -1.0, 1.5, 1.5, 2.0, 1.5, 1.5]);
 
-  const playTone = (type: string, freq?: number) => {
-    if (Platform.OS !== 'web') {
-      alert(`Playing ${type} tone. Use in-car Bluetooth.`);
-      return;
+  useEffect(() => {
+    if (soundProfile === 'sql') {
+      setEqGains([4.0, 5.5, 2.0, -1.5, 0.0, 0.0, 0.5, 1.0, -1.0, 1.5, 1.5, 2.0, 1.5, 1.5]);
+    } else if (soundProfile === 'harman') {
+      setEqGains([3.0, 3.0, 1.5, -1.0, 0.0, 0.0, 0.0, 0.5, -0.5, 0.0, 0.5, 0.5, 0.0, 0.0]);
+    } else {
+      setEqGains([1.0, 1.0, 0.0, -2.0, 1.0, 1.5, 2.0, 1.5, 0.0, 1.0, 1.0, 1.0, 0.5, 0.5]);
+    }
+  }, [soundProfile]);
+
+  // -------------------------------------------------------------
+  // ANIMATION: REAL-TIME IN-CABIN SOUNDFIELD CANVAS SIMULATION
+  // -------------------------------------------------------------
+  useEffect(() => {
+    if (Platform.OS !== 'web') return;
+
+    let time = 0;
+    const renderSoundfield = () => {
+      const canvas = soundfieldCanvasRef.current;
+      if (!canvas) {
+        animationFrameRef.current = requestAnimationFrame(renderSoundfield);
+        return;
+      }
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+
+      const width = canvas.width || 360;
+      const height = canvas.height || 420;
+
+      // Dark futuristic cabin background
+      ctx.fillStyle = '#070d18';
+      ctx.fillRect(0, 0, width, height);
+
+      // Draw Car Body Schematic Outline
+      ctx.strokeStyle = 'rgba(56, 189, 248, 0.25)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      // Hood
+      ctx.moveTo(width * 0.35, height * 0.12);
+      ctx.lineTo(width * 0.65, height * 0.12);
+      // Windshield A-pillar
+      ctx.lineTo(width * 0.80, height * 0.26);
+      // Right Doors
+      ctx.lineTo(width * 0.84, height * 0.78);
+      // Rear Hatch
+      ctx.lineTo(width * 0.65, height * 0.94);
+      ctx.lineTo(width * 0.35, height * 0.94);
+      // Left Doors
+      ctx.lineTo(width * 0.16, height * 0.78);
+      // Left A-pillar
+      ctx.lineTo(width * 0.20, height * 0.26);
+      ctx.closePath();
+      ctx.stroke();
+
+      // Seats & Center Console
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+      ctx.lineWidth = 1;
+      // Driver Seat (Right Side in India RHD)
+      ctx.strokeRect(width * 0.54, height * 0.34, width * 0.22, height * 0.16);
+      // Passenger Seat
+      ctx.strokeRect(width * 0.24, height * 0.34, width * 0.22, height * 0.16);
+      // Rear Bench
+      ctx.strokeRect(width * 0.24, height * 0.62, width * 0.52, height * 0.14);
+
+      // Driver's Head Target (Glowing Pulse)
+      const driverX = width * car.cabinCoords.driver.x;
+      const driverY = height * car.cabinCoords.driver.y;
+
+      ctx.beginPath();
+      ctx.arc(driverX, driverY, 10, 0, Math.PI * 2);
+      ctx.fillStyle = '#06b6d4';
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.arc(driverX, driverY, 16 + Math.sin(time * 0.08) * 3, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(6, 182, 212, 0.6)';
+      ctx.stroke();
+
+      // Text label for Driver
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 10px sans-serif';
+      ctx.fillText('DRIVER EAR', driverX - 28, driverY - 14);
+
+      // Sound Wave Propagation from Each Speaker
+      const speakerList = [
+        { name: 'FL', label: 'FL (Door)', ...car.cabinCoords.FL, delay: delaysMs.FL, color: '#38bdf8' },
+        { name: 'FR', label: 'FR (Door)', ...car.cabinCoords.FR, delay: delaysMs.FR, color: '#38bdf8' },
+        { name: 'RL', label: 'RL (Door)', ...car.cabinCoords.RL, delay: delaysMs.RL, color: '#818cf8' },
+        { name: 'RR', label: 'RR (Door)', ...car.cabinCoords.RR, delay: delaysMs.RR, color: '#818cf8' },
+        { name: 'SUB', label: 'SUB (Boot)', ...car.cabinCoords.SUB, delay: delaysMs.SUB, color: '#f59e0b' }
+      ];
+
+      speakerList.forEach((spk) => {
+        const spkX = width * spk.x;
+        const spkY = height * spk.y;
+
+        // Draw Speaker Dot
+        ctx.beginPath();
+        ctx.arc(spkX, spkY, spk.name === 'SUB' ? 7 : 5, 0, Math.PI * 2);
+        ctx.fillStyle = spk.color;
+        ctx.fill();
+
+        // Wave phase delay: if time alignment is enabled, offset wave by calculated delay
+        const delayOffset = timeAlignmentEnabled ? (spk.delay * 8.0) : 0;
+        const wavePhase = (time * 1.5 - delayOffset) % 120;
+
+        // Expanding concentric soundwave arcs
+        for (let r = wavePhase; r < 180; r += 35) {
+          if (r > 5) {
+            const alpha = Math.max(0, 1 - r / 180);
+            ctx.beginPath();
+            ctx.arc(spkX, spkY, r, 0, Math.PI * 2);
+            ctx.strokeStyle = `rgba(${spk.name === 'SUB' ? '245, 158, 11' : '6, 182, 212'}, ${alpha * 0.45})`;
+            ctx.lineWidth = spk.name === 'SUB' ? 2 : 1.2;
+            ctx.stroke();
+          }
+        }
+
+        // Distance & Delay Tag
+        ctx.fillStyle = 'rgba(148, 163, 184, 0.8)';
+        ctx.font = '9px monospace';
+        const delayText = timeAlignmentEnabled ? `${spk.delay}ms` : '0ms';
+        ctx.fillText(`${spk.name}: ${delayText}`, spkX - 18, spkY + 12);
+      });
+
+      time += 1;
+      animationFrameRef.current = requestAnimationFrame(renderSoundfield);
+    };
+
+    animationFrameRef.current = requestAnimationFrame(renderSoundfield);
+    return () => {
+      if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
+    };
+  }, [timeAlignmentEnabled, selectedCarIdx, currentView, studioTab]);
+
+  // -------------------------------------------------------------
+  // ANIMATION: BEZIER EQ CURVE CANVAS
+  // -------------------------------------------------------------
+  useEffect(() => {
+    if (Platform.OS !== 'web') return;
+    const canvas = eqCanvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const width = canvas.width || 550;
+    const height = canvas.height || 180;
+
+    ctx.fillStyle = '#060a12';
+    ctx.fillRect(0, 0, width, height);
+
+    // Grid Lines (+12dB, +6dB, 0dB, -6dB, -12dB)
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.06)';
+    ctx.lineWidth = 1;
+    for (let y = 20; y < height; y += 35) {
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(width, y);
+      ctx.stroke();
     }
 
+    // 0dB Center Reference Line
+    const zeroY = height / 2;
+    ctx.strokeStyle = 'rgba(56, 189, 248, 0.25)';
+    ctx.beginPath();
+    ctx.moveTo(0, zeroY);
+    ctx.lineTo(width, zeroY);
+    ctx.stroke();
+
+    // Calculate Points
+    const stepX = width / (eqGains.length - 1);
+    const points = eqGains.map((gain, i) => {
+      // 12dB max maps to top/bottom
+      const y = zeroY - (gain / 12) * (height * 0.4);
+      return { x: i * stepX, y };
+    });
+
+    // Draw Smooth Bezier Spline
+    ctx.beginPath();
+    ctx.moveTo(points[0].x, points[0].y);
+    for (let i = 0; i < points.length - 1; i++) {
+      const cpX = (points[i].x + points[i + 1].x) / 2;
+      ctx.quadraticCurveTo(points[i].x, points[i].y, cpX, (points[i].y + points[i + 1].y) / 2);
+    }
+    ctx.lineTo(points[points.length - 1].x, points[points.length - 1].y);
+
+    // Stroke Curve
+    ctx.strokeStyle = '#06b6d4';
+    ctx.lineWidth = 3;
+    ctx.shadowColor = '#06b6d4';
+    ctx.shadowBlur = 12;
+    ctx.stroke();
+    ctx.shadowBlur = 0; // reset
+
+    // Fill underneath the curve with glowing gradient
+    ctx.lineTo(width, height);
+    ctx.lineTo(0, height);
+    ctx.closePath();
+    const grad = ctx.createLinearGradient(0, 0, 0, height);
+    grad.addColorStop(0, 'rgba(6, 182, 212, 0.25)');
+    grad.addColorStop(1, 'rgba(6, 182, 212, 0.0)');
+    ctx.fillStyle = grad;
+    ctx.fill();
+
+    // Draw Interactive Frequency Handles
+    points.forEach((pt, idx) => {
+      ctx.beginPath();
+      ctx.arc(pt.x, pt.y, 4, 0, Math.PI * 2);
+      ctx.fillStyle = eqGains[idx] > 0 ? '#10b981' : eqGains[idx] < 0 ? '#ef4444' : '#ffffff';
+      ctx.fill();
+    });
+  }, [eqGains, currentView, studioTab]);
+
+  // -------------------------------------------------------------
+  // AUDIO ENGINE: WEB AUDIO OSCILLATOR & TONES
+  // -------------------------------------------------------------
+  const playTone = (type: string, freq?: number) => {
+    if (Platform.OS !== 'web') {
+      alert(`Playing ${type} test tone.`);
+      return;
+    }
     try {
       if (oscRef.current) {
         oscRef.current.stop();
@@ -197,12 +461,12 @@ export default function AppMainScreen() {
         oscRef.current = whiteNoise;
       } else {
         const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
+        const gainNode = ctx.createGain();
         osc.type = 'sine';
         osc.frequency.setValueAtTime(freq || 1000, ctx.currentTime);
-        gain.gain.setValueAtTime(0.2, ctx.currentTime);
-        osc.connect(gain);
-        gain.connect(ctx.destination);
+        gainNode.gain.setValueAtTime(0.2, ctx.currentTime);
+        osc.connect(gainNode);
+        gainNode.connect(ctx.destination);
         osc.start();
         oscRef.current = osc;
       }
@@ -223,29 +487,46 @@ export default function AppMainScreen() {
     setIsPlayingTone(null);
   };
 
+  const updateGain = (index: number, delta: number) => {
+    setEqGains((prev) => {
+      const next = [...prev];
+      next[index] = +Math.min(12, Math.max(-12, next[index] + delta)).toFixed(1);
+      return next;
+    });
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="light-content" backgroundColor="#030712" />
+      <StatusBar barStyle="light-content" backgroundColor="#020617" />
 
-      {/* Top Navbar */}
+      {/* TOP LUXURY NAVBAR */}
       <View style={styles.navBar}>
-        <View style={styles.logoRow}>
-          <View style={styles.logoDot} />
-          <Text style={styles.logoText}>CarAudio<Text style={styles.logoHighlight}>AI</Text></Text>
-          <View style={styles.navBadge}><Text style={styles.navBadgeText}>PRO DSP</Text></View>
+        <View style={styles.logoGroup}>
+          <View style={styles.logoPulseRing} />
+          <Text style={styles.logoBrand}>
+            CarAudio<Text style={styles.cyanAccent}>AI</Text>
+          </Text>
+          <View style={styles.proTag}>
+            <Text style={styles.proTagText}>STUDIO v2.0</Text>
+          </View>
         </View>
-        <View style={styles.navLinks}>
+
+        <View style={styles.navActionGroup}>
           <TouchableOpacity
-            style={[styles.navBtn, currentView === 'landing' && styles.navBtnActive]}
+            style={[styles.navPill, currentView === 'landing' && styles.navPillActive]}
             onPress={() => setCurrentView('landing')}
           >
-            <Text style={[styles.navBtnText, currentView === 'landing' && styles.navBtnTextActive]}>Overview</Text>
+            <Text style={[styles.navPillText, currentView === 'landing' && styles.navPillTextActive]}>
+              ✨ Experience
+            </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.navBtn, currentView === 'studio' && styles.navBtnActive]}
+            style={[styles.navPill, currentView === 'studio' && styles.navPillActive]}
             onPress={() => setCurrentView('studio')}
           >
-            <Text style={[styles.navBtnText, currentView === 'studio' && styles.navBtnTextActive]}>Tuning Studio 🎛️</Text>
+            <Text style={[styles.navPillText, currentView === 'studio' && styles.navPillTextActive]}>
+              🎛️ Acoustic Studio
+            </Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -253,259 +534,288 @@ export default function AppMainScreen() {
       <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
 
         {/* ========================================================================= */}
-        {/* VIEW 1: LUXURY HIGH-CONVERTING LANDING PAGE                               */}
+        {/* VIEW 1: LUXURY CINEMATIC EXPERIENCE LANDING                               */}
         {/* ========================================================================= */}
         {currentView === 'landing' && (
-          <View style={styles.landingContent}>
+          <View style={styles.viewContent}>
 
-            {/* HERO SECTION */}
-            <View style={styles.heroSection}>
+            {/* CINEMATIC HERO */}
+            <View style={styles.cinematicHero}>
+              <View style={styles.glowBlob1} />
+              <View style={styles.glowBlob2} />
+
               <View style={styles.heroBadge}>
-                <Text style={styles.heroBadgeText}>⚡ AI-POWERED CAR ACOUSTIC ENGINE • INDIA</Text>
+                <Text style={styles.heroBadgeText}>⚡ THE FIRST AI ACOUSTIC ENGINE FOR INDIAN CARS</Text>
               </View>
+
               <Text style={styles.heroHeadline}>
-                Turn Your Car Into A <Text style={styles.gradientText}>Concert Hall</Text> on Wheels.
-              </Text>
-              <Text style={styles.heroSubhead}>
-                Stop wasting ₹20,000 on professional audio installers. Our AI calculates millimeter-accurate time alignment, 14-band parametric EQ, and crossover slopes for any car in 60 seconds.
+                Automotive Soundstage.<br />
+                <Text style={styles.gradientCyan}>Engineered with AI.</Text>
               </Text>
 
-              <View style={styles.heroCtaRow}>
-                <TouchableOpacity style={styles.ctaPrimary} onPress={() => setCurrentView('studio')}>
-                  <Text style={styles.ctaPrimaryText}>Launch Studio & Tune My Car →</Text>
+              <Text style={styles.heroSubhead}>
+                Transform untuned car speakers into a laser-focused, phase-coherent studio monitor.
+                Experience deep kick punch, zero windshield fatigue, and pinpoint vocal staging.
+              </Text>
+
+              <View style={styles.heroBtnRow}>
+                <TouchableOpacity style={styles.primaryGlowBtn} onPress={() => setCurrentView('studio')}>
+                  <Text style={styles.primaryGlowBtnText}>Launch Live Acoustic Studio →</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={styles.ctaSecondary}
+                  style={styles.ghostGlowBtn}
                   onPress={() => Linking.openURL('https://github.com/adityashm/CarAudioAI')}
                 >
-                  <Text style={styles.ctaSecondaryText}>⭐ Star on GitHub</Text>
+                  <Text style={styles.ghostGlowBtnText}>⭐ GitHub Repo</Text>
                 </TouchableOpacity>
               </View>
 
-              {/* STATS STRIP */}
-              <View style={styles.statsStrip}>
-                <View style={styles.statItem}>
-                  <Text style={styles.statNumber}>100+</Text>
-                  <Text style={styles.statLabel}>Indian Car Models</Text>
+              {/* VEO VIDEO / SIMULATION SHOWCASE CONTAINER */}
+              <View style={styles.videoShowcaseContainer}>
+                <View style={styles.videoShowcaseHeader}>
+                  <View style={styles.videoDotRed} />
+                  <View style={styles.videoDotYellow} />
+                  <View style={styles.videoDotGreen} />
+                  <Text style={styles.videoHeaderTitle}>AI SOUNDFIELD SIMULATION • 343 M/S ACOUSTIC MAPPING</Text>
                 </View>
-                <View style={styles.statDivider} />
-                <View style={styles.statItem}>
-                  <Text style={styles.statNumber}>0 ms</Text>
-                  <Text style={styles.statLabel}>Phase Delay Target</Text>
+
+                {/* Video/Canvas Simulation Preview */}
+                <View style={styles.simulationPreview}>
+                  <View style={styles.hudMetricTopLeft}>
+                    <Text style={styles.hudLabel}>PHASE COHERENCE</Text>
+                    <Text style={styles.hudValue}>99.8% TARGET</Text>
+                  </View>
+                  <View style={styles.hudMetricTopRight}>
+                    <Text style={styles.hudLabel}>DELAY CALIBRATION</Text>
+                    <Text style={styles.hudValueCyan}>0.00 ms OFFSET</Text>
+                  </View>
+
+                  <View style={styles.centerSimulationPulse}>
+                    <Text style={styles.pulseIcon}>🚗🔊</Text>
+                    <Text style={styles.pulseTag}>Driver-Seat Sweet Spot Center</Text>
+                    <Text style={styles.pulseSub}>Linkwitz-Riley 24dB • 14-Band Parametric EQ • Port Subsonic Active</Text>
+                  </View>
                 </View>
-                <View style={styles.statDivider} />
-                <View style={styles.statItem}>
-                  <Text style={styles.statNumber}>₹99</Text>
-                  <Text style={styles.statLabel}>vs ₹15,000 Tuning Rig</Text>
+
+                <View style={styles.videoAmbientBacklight} />
+              </View>
+
+              {/* KEY STATS BAR */}
+              <View style={styles.statsBar}>
+                <View style={styles.statCell}>
+                  <Text style={styles.statVal}>100+</Text>
+                  <Text style={styles.statKey}>Indian Car Cabins</Text>
+                </View>
+                <View style={styles.statSep} />
+                <View style={styles.statCell}>
+                  <Text style={styles.statVal}>34.3</Text>
+                  <Text style={styles.statKey}>cm/ms Speed of Sound</Text>
+                </View>
+                <View style={styles.statSep} />
+                <View style={styles.statCell}>
+                  <Text style={styles.statVal}>₹99</Text>
+                  <Text style={styles.statKey}>vs ₹15,000 Hardware</Text>
                 </View>
               </View>
             </View>
 
-            {/* BEFORE / AFTER ACOUSTIC COMPARISON */}
-            <View style={styles.sectionContainer}>
-              <Text style={styles.sectionTag}>ACOUSTIC COMPARISON</Text>
-              <Text style={styles.sectionTitle}>Why Untuned Car Audio Sounds Muddy</Text>
+            {/* INTERACTIVE COMPARISON MATRIX */}
+            <View style={styles.sectionWrap}>
+              <Text style={styles.sectionOverline}>ACOUSTIC PHYSICS</Text>
+              <Text style={styles.sectionHeading}>Why Great Speakers Sound Terrible Untuned</Text>
 
-              <View style={styles.comparisonGrid}>
-                <View style={styles.comparisonCardBad}>
-                  <Text style={styles.cardHeaderBad}>❌ Stock / Untuned Setup</Text>
-                  <Text style={styles.cardItemBad}>• Soundstage collapsed down in the right door</Text>
-                  <Text style={styles.cardItemBad}>• 200Hz cabin resonance makes bass muddy</Text>
-                  <Text style={styles.cardItemBad}>• Windshield reflections cause ear fatigue at 4kHz</Text>
-                  <Text style={styles.cardItemBad}>• Ported subwoofer bottoming out below 30Hz</Text>
+              <View style={styles.cardsRow}>
+                <View style={styles.cardUntuned}>
+                  <Text style={styles.cardHeaderRed}>❌ Untuned Stock Audio</Text>
+                  <Text style={styles.bulletRed}>• Asymmetric Seating: Closer right speaker reaches ears 1.25ms faster, collapsing the soundstage into the door.</Text>
+                  <Text style={styles.bulletRed}>• 200Hz Cabin Boom: Glass & metal boundaries create heavy acoustic bass resonance.</Text>
+                  <Text style={styles.bulletRed}>• 4kHz Harshness: Windshield reflections spike treble, causing listener fatigue within 20 mins.</Text>
+                  <Text style={styles.bulletRed}>• Port Unloading: Subwoofers bottom out and burn coils below enclosure tuning frequency.</Text>
                 </View>
 
-                <View style={styles.comparisonCardGood}>
-                  <Text style={styles.cardHeaderGood}>✅ CarAudioAI Calibrated</Text>
-                  <Text style={styles.cardItemGood}>• Soundstage lifted dead-center onto windshield</Text>
-                  <Text style={styles.cardItemGood}>• Tight, punchy 63Hz 808s and kick drums</Text>
-                  <Text style={styles.cardItemGood}>• Fatigue-free, crystal clear vocal imaging</Text>
-                  <Text style={styles.cardItemGood}>• 28Hz Subsonic filter protecting your sub</Text>
-                </View>
-              </View>
-            </View>
-
-            {/* BENTO GRID: KEY FEATURES */}
-            <View style={styles.sectionContainer}>
-              <Text style={styles.sectionTag}>CORE ARCHITECTURE</Text>
-              <Text style={styles.sectionTitle}>Precision Acoustic Engineering</Text>
-
-              <View style={styles.bentoGrid}>
-                <View style={styles.bentoCard}>
-                  <Text style={styles.bentoIcon}>⏱️</Text>
-                  <Text style={styles.bentoTitle}>Time Alignment Matrix</Text>
-                  <Text style={styles.bentoDesc}>
-                    Calculates distance differences from driver ears to all 5 speakers (FL, FR, RL, RR, SUB) down to 0.01 milliseconds.
-                  </Text>
-                </View>
-
-                <View style={styles.bentoCard}>
-                  <Text style={styles.bentoIcon}>🎛️</Text>
-                  <Text style={styles.bentoTitle}>14-Band Parametric EQ</Text>
-                  <Text style={styles.bentoDesc}>
-                    Generates exact decibel offsets directly matching Nakamichi, Pioneer, Sony, and Android head unit sliders.
-                  </Text>
-                </View>
-
-                <View style={styles.bentoCard}>
-                  <Text style={styles.bentoIcon}>🛡️</Text>
-                  <Text style={styles.bentoTitle}>Ported Box Subsonic Protection</Text>
-                  <Text style={styles.bentoDesc}>
-                    Prevents mechanical cone unloading by calculating safe high-pass cutoffs based on your exact port tuning frequency.
-                  </Text>
-                </View>
-
-                <View style={styles.bentoCard}>
-                  <Text style={styles.bentoIcon}>⚡</Text>
-                  <Text style={styles.bentoTitle}>Multimeter Gain Staging</Text>
-                  <Text style={styles.bentoDesc}>
-                    Converts speaker RMS ratings and impedance into precise target AC voltages (13.4V, 44.7V) for zero-clipping power.
-                  </Text>
+                <View style={styles.cardTuned}>
+                  <Text style={styles.cardHeaderGreen}>✅ CarAudioAI Calibrated</Text>
+                  <Text style={styles.bulletGreen}>• Millisecond Delay: Right speaker delayed by 1.25ms so all 5 soundwaves hit the driver's ears simultaneously.</Text>
+                  <Text style={styles.bulletGreen}>• -1.5dB Notch @ 200Hz: Eliminates muddy cabin boom, yielding punchy kick drums.</Text>
+                  <Text style={styles.bulletGreen}>• -1.0dB Reflection Tamer @ 4kHz: Crystal-clear vocals without harsh ear strain.</Text>
+                  <Text style={styles.bulletGreen}>• Subsonic Safety HPF: Protects 35Hz ported enclosures from mechanical cone damage.</Text>
                 </View>
               </View>
             </View>
 
-            {/* PRICING PLANS */}
-            <View style={styles.sectionContainer}>
-              <Text style={styles.sectionTag}>TRANSPARENT PRICING</Text>
-              <Text style={styles.sectionTitle}>Professional Tuning for the Price of a Coffee</Text>
+            {/* BENTO ARCHITECTURE */}
+            <View style={styles.sectionWrap}>
+              <Text style={styles.sectionOverline}>ENGINEERING HIGHLIGHTS</Text>
+              <Text style={styles.sectionHeading}>Four Pillars of Studio Calibration</Text>
 
-              <View style={styles.pricingGrid}>
-                <View style={styles.pricingCard}>
-                  <Text style={styles.planName}>Free Starter</Text>
-                  <Text style={styles.planPrice}>₹0</Text>
-                  <Text style={styles.planDesc}>For casual car owners testing basic EQ</Text>
-                  <View style={styles.planDivider} />
-                  <Text style={styles.planFeature}>✓ 1 Car Profile</Text>
-                  <Text style={styles.planFeature}>✓ Standard 14-Band EQ Presets</Text>
-                  <Text style={styles.planFeature}>✓ In-Browser Pink Noise Generator</Text>
-                  <TouchableOpacity style={styles.planBtnSecondary} onPress={() => setCurrentView('studio')}>
-                    <Text style={styles.planBtnTextSecondary}>Get Started</Text>
+              <View style={styles.bentoContainer}>
+                <View style={styles.bentoBlock}>
+                  <Text style={styles.bentoEmoji}>⏱️</Text>
+                  <Text style={styles.bentoHead}>Time Alignment Matrix</Text>
+                  <Text style={styles.bentoBody}>
+                    Calculates distance offsets (in cm and ms) from the driver's ear to each speaker in the cabin for pinpoint soundstage centering.
+                  </Text>
+                </View>
+
+                <View style={styles.bentoBlock}>
+                  <Text style={styles.bentoEmoji}>🎚️</Text>
+                  <Text style={styles.bentoHead}>14-Band Parametric EQ</Text>
+                  <Text style={styles.bentoBody}>
+                    Tailored for Indian SQL taste (Punjabi, EDM, Hip-Hop): +5.5dB 63Hz kick punch, clean midrange, and silky 12kHz high-frequency air.
+                  </Text>
+                </View>
+
+                <View style={styles.bentoBlock}>
+                  <Text style={styles.bentoEmoji}>🛡️</Text>
+                  <Text style={styles.bentoHead}>Subsonic Port Protection</Text>
+                  <Text style={styles.bentoBody}>
+                    Computes safe high-pass cutoffs (~28Hz for 35Hz ported boxes) so your subwoofer delivers massive low-end without bottoming out.
+                  </Text>
+                </View>
+
+                <View style={styles.bentoBlock}>
+                  <Text style={styles.bentoEmoji}>⚡</Text>
+                  <Text style={styles.bentoHead}>Multimeter Gain Staging</Text>
+                  <Text style={styles.bentoBody}>
+                    Calculates exact AC voltage targets (V = √(P×R)) at 75% head unit volume so your amplifier delivers maximum clean undistorted power.
+                  </Text>
+                </View>
+              </View>
+            </View>
+
+            {/* PRICING MATRIX */}
+            <View style={styles.sectionWrap}>
+              <Text style={styles.sectionOverline}>TRANSPARENT PLANS</Text>
+              <Text style={styles.sectionHeading}>Democratizing Acoustic Science</Text>
+
+              <View style={styles.pricingRow}>
+                <View style={styles.priceBox}>
+                  <Text style={styles.tierName}>Free Starter</Text>
+                  <Text style={styles.tierPrice}>₹0</Text>
+                  <Text style={styles.tierSub}>For basic graphic EQ testing</Text>
+                  <View style={styles.tierLine} />
+                  <Text style={styles.tierItem}>✓ 1 Vehicle Profile</Text>
+                  <Text style={styles.tierItem}>✓ 14-Band EQ Presets</Text>
+                  <Text style={styles.tierItem}>✓ In-Browser Pink Noise Generator</Text>
+                  <TouchableOpacity style={styles.tierBtnSecondary} onPress={() => setCurrentView('studio')}>
+                    <Text style={styles.tierBtnTextSec}>Get Started</Text>
                   </TouchableOpacity>
                 </View>
 
-                <View style={[styles.pricingCard, styles.pricingCardFeatured]}>
-                  <View style={styles.featuredBadge}><Text style={styles.featuredBadgeText}>POPULAR</Text></View>
-                  <Text style={styles.planName}>Pro Enthusiast</Text>
-                  <Text style={styles.planPrice}>₹99<Text style={styles.pricePer}> / month</Text></Text>
-                  <Text style={styles.planDesc}>Complete acoustic calibration suite</Text>
-                  <View style={styles.planDivider} />
-                  <Text style={styles.planFeature}>✓ Unlimited Cars & Hardware Sets</Text>
-                  <Text style={styles.planFeature}>✓ Millimeter Time Alignment Delays</Text>
-                  <Text style={styles.planFeature}>✓ Crossover & Subsonic Protection</Text>
-                  <Text style={styles.planFeature}>✓ Multimeter AC Voltage Calculator</Text>
-                  <Text style={styles.planFeature}>✓ Direct DSP Export (Pioneer XML / MiniDSP)</Text>
-                  <TouchableOpacity style={styles.planBtnPrimary} onPress={() => setCurrentView('studio')}>
-                    <Text style={styles.planBtnTextPrimary}>Start Pro Tuning →</Text>
+                <View style={[styles.priceBox, styles.priceBoxPopular]}>
+                  <View style={styles.popularBadge}><Text style={styles.popularBadgeText}>MOST POPULAR</Text></View>
+                  <Text style={styles.tierName}>Pro Enthusiast</Text>
+                  <Text style={styles.tierPrice}>₹99<Text style={styles.tierMonth}>/mo</Text></Text>
+                  <Text style={styles.tierSub}>Complete AI acoustic studio</Text>
+                  <View style={styles.tierLine} />
+                  <Text style={styles.tierItem}>✓ Unlimited Cars & Audio Hardware</Text>
+                  <Text style={styles.tierItem}>✓ Millimeter Time Alignment Delays</Text>
+                  <Text style={styles.tierItem}>✓ Ported Box Subsonic Protection</Text>
+                  <Text style={styles.tierItem}>✓ Multimeter AC Voltage Calculator</Text>
+                  <Text style={styles.tierItem}>✓ Export to Pioneer XML & MiniDSP JSON</Text>
+                  <TouchableOpacity style={styles.tierBtnPrimary} onPress={() => setCurrentView('studio')}>
+                    <Text style={styles.tierBtnTextPri}>Start Pro Tuning →</Text>
                   </TouchableOpacity>
                 </View>
 
-                <View style={styles.pricingCard}>
-                  <Text style={styles.planName}>Installer Pro</Text>
-                  <Text style={styles.planPrice}>₹999<Text style={styles.pricePer}> / year</Text></Text>
-                  <Text style={styles.planDesc}>For audio accessory shops & garages</Text>
-                  <View style={styles.planDivider} />
-                  <Text style={styles.planFeature}>✓ Everything in Pro</Text>
-                  <Text style={styles.planFeature}>✓ Multi-Customer Car Profiler</Text>
-                  <Text style={styles.planFeature}>✓ WhatsApp Tuning Reports</Text>
-                  <Text style={styles.planFeature}>✓ Commercial Workshop License</Text>
-                  <TouchableOpacity style={styles.planBtnSecondary} onPress={() => setCurrentView('studio')}>
-                    <Text style={styles.planBtnTextSecondary}>Subscribe Yearly</Text>
+                <View style={styles.priceBox}>
+                  <Text style={styles.tierName}>Installer Pro</Text>
+                  <Text style={styles.tierPrice}>₹999<Text style={styles.tierMonth}>/yr</Text></Text>
+                  <Text style={styles.tierSub}>For audio accessory shops</Text>
+                  <View style={styles.tierLine} />
+                  <Text style={styles.tierItem}>✓ Everything in Pro</Text>
+                  <Text style={styles.tierItem}>✓ Multi-Customer Profile Storage</Text>
+                  <Text style={styles.tierItem}>✓ WhatsApp Tuning Reports</Text>
+                  <Text style={styles.tierItem}>✓ Commercial Workshop License</Text>
+                  <TouchableOpacity style={styles.tierBtnSecondary} onPress={() => setCurrentView('studio')}>
+                    <Text style={styles.tierBtnTextSec}>Subscribe Yearly</Text>
                   </TouchableOpacity>
                 </View>
               </View>
             </View>
 
-            {/* CALL TO ACTION BANNER */}
-            <View style={styles.ctaBanner}>
-              <Text style={styles.ctaBannerTitle}>Ready to hear the difference in your car?</Text>
-              <Text style={styles.ctaBannerSubtitle}>Select your car model, enter your gear, and get instant calibration values.</Text>
-              <TouchableOpacity style={styles.ctaBannerBtn} onPress={() => setCurrentView('studio')}>
-                <Text style={styles.ctaBannerBtnText}>Open Tuning Studio Now 🚀</Text>
-              </TouchableOpacity>
-            </View>
           </View>
         )}
 
         {/* ========================================================================= */}
-        {/* VIEW 2: MULTI-CAR & MULTI-SETUP TUNING STUDIO                             */}
+        {/* VIEW 2: MULTI-CAR & HARDWARE ACOUSTIC STUDIO                              */}
         {/* ========================================================================= */}
         {currentView === 'studio' && (
-          <View style={styles.studioContent}>
+          <View style={styles.viewContent}>
 
             {/* VEHICLE SELECTOR CAROUSEL */}
-            <View style={styles.studioCard}>
-              <View style={styles.studioCardHeaderRow}>
-                <Text style={styles.studioSectionTitle}>🚗 Select Vehicle ({car.make} {car.model})</Text>
-                <View style={styles.chip}><Text style={styles.chipText}>{car.category}</Text></View>
+            <View style={styles.glassCard}>
+              <View style={styles.cardHeaderFlex}>
+                <Text style={styles.cardTitle}>🚗 Active Vehicle: <Text style={styles.cyanAccent}>{car.make} {car.model}</Text></Text>
+                <View style={styles.pillBadge}><Text style={styles.pillBadgeText}>{car.category}</Text></View>
               </View>
 
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.carScroll}>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.carPickerScroll}>
                 {CAR_CATALOG.map((item, idx) => (
                   <TouchableOpacity
                     key={idx}
-                    style={[styles.carCardBtn, selectedCarIdx === idx && styles.carCardBtnActive]}
+                    style={[styles.carOptionCard, selectedCarIdx === idx && styles.carOptionCardActive]}
                     onPress={() => setSelectedCarIdx(idx)}
                   >
-                    <Text style={[styles.carCardMake, selectedCarIdx === idx && styles.textWhite]}>{item.make}</Text>
-                    <Text style={[styles.carCardModel, selectedCarIdx === idx && styles.textCyan]}>{item.model}</Text>
-                    <Text style={styles.carCardDim}>Wheelbase: {item.wheelbase}mm</Text>
+                    <Text style={styles.carOptionMake}>{item.make}</Text>
+                    <Text style={[styles.carOptionModel, selectedCarIdx === idx && styles.cyanAccent]}>{item.model}</Text>
+                    <Text style={styles.carOptionSpec}>Wheelbase: {item.wheelbase}mm</Text>
                   </TouchableOpacity>
                 ))}
               </ScrollView>
             </View>
 
-            {/* AUDIO HARDWARE CONFIGURATOR */}
-            <View style={styles.studioCard}>
-              <Text style={styles.studioSectionTitle}>🎛️ Audio Equipment Configurator</Text>
+            {/* HARDWARE CONFIGURATOR */}
+            <View style={styles.glassCard}>
+              <Text style={styles.cardTitle}>🎛️ Audio Equipment Configurator</Text>
 
               {/* Head Unit */}
-              <Text style={styles.configLabel}>1. Head Unit / Infotainment:</Text>
-              <View style={styles.configOptionGrid}>
+              <Text style={styles.subConfigLabel}>Head Unit / Source:</Text>
+              <View style={styles.configOptionsRow}>
                 {HEAD_UNITS.map((item, idx) => (
                   <TouchableOpacity
                     key={idx}
-                    style={[styles.configOptionBtn, selectedHeadUnitIdx === idx && styles.configOptionBtnActive]}
+                    style={[styles.configOptionChip, selectedHeadUnitIdx === idx && styles.configOptionChipActive]}
                     onPress={() => setSelectedHeadUnitIdx(idx)}
                   >
-                    <Text style={[styles.configOptionText, selectedHeadUnitIdx === idx && styles.textWhite]}>{item.name}</Text>
+                    <Text style={[styles.configOptionChipText, selectedHeadUnitIdx === idx && styles.textWhite]}>{item.name}</Text>
                   </TouchableOpacity>
                 ))}
               </View>
 
               {/* Front Speakers */}
-              <Text style={styles.configLabel}>2. Front & Rear Speakers:</Text>
-              <View style={styles.configOptionGrid}>
+              <Text style={styles.subConfigLabel}>Front & Rear Speakers:</Text>
+              <View style={styles.configOptionsRow}>
                 {SPEAKER_SETS.map((item, idx) => (
                   <TouchableOpacity
                     key={idx}
-                    style={[styles.configOptionBtn, selectedSpeakerIdx === idx && styles.configOptionBtnActive]}
+                    style={[styles.configOptionChip, selectedSpeakerIdx === idx && styles.configOptionChipActive]}
                     onPress={() => setSelectedSpeakerIdx(idx)}
                   >
-                    <Text style={[styles.configOptionText, selectedSpeakerIdx === idx && styles.textWhite]}>{item.name}</Text>
+                    <Text style={[styles.configOptionChipText, selectedSpeakerIdx === idx && styles.textWhite]}>{item.name}</Text>
                   </TouchableOpacity>
                 ))}
               </View>
 
               {/* Subwoofer */}
-              <Text style={styles.configLabel}>3. Subwoofer & Enclosure:</Text>
-              <View style={styles.configOptionGrid}>
+              <Text style={styles.subConfigLabel}>Subwoofer & Enclosure:</Text>
+              <View style={styles.configOptionsRow}>
                 {SUBWOOFERS.map((item, idx) => (
                   <TouchableOpacity
                     key={idx}
-                    style={[styles.configOptionBtn, selectedSubIdx === idx && styles.configOptionBtnActive]}
+                    style={[styles.configOptionChip, selectedSubIdx === idx && styles.configOptionChipActive]}
                     onPress={() => setSelectedSubIdx(idx)}
                   >
-                    <Text style={[styles.configOptionText, selectedSubIdx === idx && styles.textWhite]}>{item.name}</Text>
+                    <Text style={[styles.configOptionChipText, selectedSubIdx === idx && styles.textWhite]}>{item.name}</Text>
                   </TouchableOpacity>
                 ))}
               </View>
             </View>
 
-            {/* SOUND TARGET PROFILE TABS */}
-            <View style={styles.studioCard}>
-              <Text style={styles.studioSectionTitle}>🎯 Sound Target Profile</Text>
-              <View style={styles.soundProfileRow}>
+            {/* SOUND TARGET TABS */}
+            <View style={styles.glassCard}>
+              <Text style={styles.cardTitle}>🎯 Acoustic Target Profile</Text>
+              <View style={styles.targetRow}>
                 {[
                   { id: 'sql', label: '🔥 SQL (Punjabi/EDM/Hip-Hop)', desc: 'High impact sub-bass + crisp transparent vocals' },
                   { id: 'harman', label: '🎵 Harman Reference', desc: 'Linear in-cabin acoustic balance' },
@@ -513,127 +823,76 @@ export default function AppMainScreen() {
                 ].map((item) => (
                   <TouchableOpacity
                     key={item.id}
-                    style={[styles.soundProfileBtn, soundProfile === item.id && styles.soundProfileBtnActive]}
+                    style={[styles.targetBtn, soundProfile === item.id && styles.targetBtnActive]}
                     onPress={() => setSoundProfile(item.id as any)}
                   >
-                    <Text style={[styles.soundProfileTitle, soundProfile === item.id && styles.textBlack]}>{item.label}</Text>
-                    <Text style={[styles.soundProfileDesc, soundProfile === item.id && styles.textBlack]}>{item.desc}</Text>
+                    <Text style={[styles.targetBtnTitle, soundProfile === item.id && styles.textBlack]}>{item.label}</Text>
+                    <Text style={[styles.targetBtnDesc, soundProfile === item.id && styles.textBlack]}>{item.desc}</Text>
                   </TouchableOpacity>
                 ))}
               </View>
             </View>
 
-            {/* STUDIO NAVIGATION TABS */}
-            <View style={styles.studioNavTabs}>
+            {/* STUDIO TOOLS NAVIGATION */}
+            <View style={styles.toolNavStrip}>
               {[
-                { id: 'eq', label: '🎚️ Graphic EQ' },
-                { id: 'crossover', label: '🎛️ Crossovers' },
-                { id: 'time_alignment', label: '⏱️ Time Align' },
-                { id: 'gain', label: '⚡ Gain Staging' },
-                { id: 'tones', label: '🔊 Test Tones' },
-                { id: 'export', label: '📤 Export DSP' }
+                { id: 'simulation', label: '🌊 Live Soundfield' },
+                { id: 'eq', label: '🎚️ Bezier EQ Curve' },
+                { id: 'crossover', label: '🎛️ Crossovers & Dials' },
+                { id: 'gain', label: '⚡ Multimeter Voltages' },
+                { id: 'tones', label: '🔊 Tone Generator' },
+                { id: 'export', label: '📤 DSP File Exporter' }
               ].map((tab) => (
                 <TouchableOpacity
                   key={tab.id}
-                  style={[styles.studioNavTabBtn, studioTab === tab.id && styles.studioNavTabBtnActive]}
+                  style={[styles.toolNavPill, studioTab === tab.id && styles.toolNavPillActive]}
                   onPress={() => setStudioTab(tab.id as any)}
                 >
-                  <Text style={[styles.studioNavTabText, studioTab === tab.id && styles.studioNavTabTextActive]}>{tab.label}</Text>
+                  <Text style={[styles.toolNavPillText, studioTab === tab.id && styles.toolNavPillTextActive]}>{tab.label}</Text>
                 </TouchableOpacity>
               ))}
             </View>
 
-            {/* TAB: GRAPHIC EQ */}
-            {studioTab === 'eq' && (
-              <View style={styles.studioCard}>
-                <Text style={styles.studioSectionTitle}>🎚️ 14-Band Head Unit Equalizer ({headUnit.name})</Text>
-                <Text style={styles.studioSubNote}>
-                  Live values dynamically computed for {car.make} {car.model} with {soundProfile.toUpperCase()} target:
+            {/* TAB 1: LIVE SOUNDFIELD CANVAS SIMULATION */}
+            {studioTab === 'simulation' && (
+              <View style={styles.glassCard}>
+                <View style={styles.cardHeaderFlex}>
+                  <Text style={styles.cardTitle}>🌊 In-Cabin Acoustic Propagation Simulator</Text>
+                  <TouchableOpacity
+                    style={[styles.toggleBtn, timeAlignmentEnabled && styles.toggleBtnActive]}
+                    onPress={() => setTimeAlignmentEnabled(!timeAlignmentEnabled)}
+                  >
+                    <Text style={styles.toggleBtnText}>
+                      {timeAlignmentEnabled ? '✅ TIME ALIGNED (AI ON)' : '❌ STOCK PHASE (OFF)'}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+                <Text style={styles.cardSubNote}>
+                  Live wave rendering inside {car.make} {car.model} cabin. Toggle time alignment to see wave pulses converge at driver's head:
                 </Text>
 
-                <View style={styles.eqGrid}>
-                  {eqBands.map((b) => {
-                    const isBoost = b.gain > 0;
-                    const isCut = b.gain < 0;
-                    return (
-                      <View key={b.freq} style={styles.eqCol}>
-                        <View style={styles.eqTrack}>
-                          <View
-                            style={[
-                              styles.eqBar,
-                              {
-                                height: `${Math.abs(b.gain) * 7 + 10}%`,
-                                backgroundColor: isBoost ? '#06b6d4' : isCut ? '#ef4444' : '#64748b',
-                                bottom: isCut ? undefined : '50%',
-                                top: isCut ? '50%' : undefined
-                              }
-                            ]}
-                          />
-                          <View style={styles.eqZeroLine} />
-                        </View>
-                        <Text style={[styles.eqGainText, isBoost && styles.textCyan, isCut && styles.textRed]}>
-                          {b.gain > 0 ? `+${b.gain}` : b.gain}
-                        </Text>
-                        <Text style={styles.eqFreqText}>{b.label}</Text>
-                      </View>
-                    );
-                  })}
-                </View>
+                {Platform.OS === 'web' ? (
+                  <View style={styles.canvasContainer}>
+                    <canvas
+                      ref={soundfieldCanvasRef}
+                      width={480}
+                      height={420}
+                      style={{ width: '100%', maxWidth: 480, height: 380, borderRadius: 12 }}
+                    />
+                  </View>
+                ) : (
+                  <View style={styles.fallbackNotice}>
+                    <Text style={styles.fallbackText}>Live HTML5 Canvas wave simulation running on Web.</Text>
+                  </View>
+                )}
 
-                <View style={styles.highlightBox}>
-                  <Text style={styles.highlightBoxTitle}>💡 Acoustic Offsets Applied:</Text>
-                  <Text style={styles.highlightBoxLine}>• <Text style={styles.boldWhite}>+5.5 dB @ 63Hz</Text>: 35Hz ported kick drum resonance boost.</Text>
-                  <Text style={styles.highlightBoxLine}>• <Text style={styles.boldWhite}>-1.5 dB @ 200Hz</Text>: Eliminates {car.category} cabin boom.</Text>
-                  <Text style={styles.highlightBoxLine}>• <Text style={styles.boldWhite}>-1.0 dB @ 4kHz</Text>: Tames windshield glass reflections.</Text>
-                </View>
-              </View>
-            )}
-
-            {/* TAB: CROSSOVERS */}
-            {studioTab === 'crossover' && (
-              <View style={styles.studioCard}>
-                <Text style={styles.studioSectionTitle}>🎛️ Amplifier Crossover & Subsonic Protection</Text>
-
-                <View style={styles.dialCard}>
-                  <Text style={styles.dialTitle}>Front Speakers ({speakers.name})</Text>
-                  <Text style={styles.dialValue}>HPF (High Pass): ~{frontHpf} Hz</Text>
-                  <Text style={styles.dialPosition}>Clock Position: Approx. 9:30 o'clock</Text>
-                  <Text style={styles.dialNote}>Protects 6.5" woofers from over-excursion and cleans vocal midrange.</Text>
-                </View>
-
-                <View style={styles.dialCard}>
-                  <Text style={styles.dialTitle}>Rear Speakers (Attenuated Rear Fill)</Text>
-                  <Text style={styles.dialValue}>HPF (High Pass): ~{rearHpf} Hz</Text>
-                  <Text style={styles.dialPosition}>Clock Position: Approx. 10:00 o'clock</Text>
-                  <Text style={styles.dialNote}>Attenuated (-4dB) ambient fill so soundstage stays focused on front dash.</Text>
-                </View>
-
-                <View style={[styles.dialCard, styles.dialCardAlert]}>
-                  <Text style={[styles.dialTitle, { color: '#f59e0b' }]}>Subwoofer ({sub.name})</Text>
-                  <Text style={styles.dialValue}>LPF (Low Pass): ~{subLpf} Hz</Text>
-                  <Text style={styles.dialValue}>Subsonic Filter: ~{subsonicHz} Hz</Text>
-                  {sub.type === 'ported' && (
-                    <Text style={styles.subsonicAlert}>
-                      ⚠️ PORT PROTECTION: Below {sub.tune}Hz, air spring collapses and woofer will bottom out. {subsonicHz}Hz subsonic cutoff protects voice coil.
-                    </Text>
-                  )}
-                  <Text style={styles.dialNote}>Bass Boost: MUST BE SET TO 0 dB (OFF).</Text>
-                </View>
-              </View>
-            )}
-
-            {/* TAB: TIME ALIGNMENT */}
-            {studioTab === 'time_alignment' && (
-              <View style={styles.studioCard}>
-                <Text style={styles.studioSectionTitle}>⏱️ Driver-Seat Time Alignment ({car.make} {car.model})</Text>
-                <Text style={styles.studioSubNote}>Delays sound from closer speakers so all waves hit your ears simultaneously:</Text>
-
-                <View style={styles.taTable}>
-                  <View style={styles.taTableHeader}>
-                    <Text style={styles.taTh}>Channel</Text>
-                    <Text style={styles.taTh}>Distance</Text>
-                    <Text style={styles.taTh}>Delay</Text>
-                    <Text style={styles.taTh}>Offset</Text>
+                {/* Acoustic Delay Table */}
+                <View style={styles.delayTable}>
+                  <View style={styles.delayHeader}>
+                    <Text style={styles.delayTh}>Speaker</Text>
+                    <Text style={styles.delayTh}>Distance</Text>
+                    <Text style={styles.delayTh}>Time Delay</Text>
+                    <Text style={styles.delayTh}>Physical Offset</Text>
                   </View>
                   {[
                     { name: 'Front Right (FR)', dist: `${car.distances_rhd.FR} cm`, delay: `${delaysMs.FR} ms`, offset: `${maxDistance - car.distances_rhd.FR} cm` },
@@ -642,105 +901,207 @@ export default function AppMainScreen() {
                     { name: 'Rear Left (RL)', dist: `${car.distances_rhd.RL} cm`, delay: `${delaysMs.RL} ms`, offset: `${maxDistance - car.distances_rhd.RL} cm` },
                     { name: 'Boot Subwoofer', dist: `${car.distances_rhd.SUB} cm`, delay: '0.00 ms (Ref)', offset: '0 cm' },
                   ].map((row, i) => (
-                    <View key={i} style={[styles.taTableRow, i % 2 === 1 && styles.taTableRowAlt]}>
-                      <Text style={styles.taTdName}>{row.name}</Text>
-                      <Text style={styles.taTd}>{row.dist}</Text>
-                      <Text style={styles.taTdHighlight}>{row.delay}</Text>
-                      <Text style={styles.taTd}>{row.offset}</Text>
+                    <View key={i} style={[styles.delayRow, i % 2 === 1 && styles.delayRowAlt]}>
+                      <Text style={styles.delayTdName}>{row.name}</Text>
+                      <Text style={styles.delayTd}>{row.dist}</Text>
+                      <Text style={styles.delayTdCyan}>{row.delay}</Text>
+                      <Text style={styles.delayTd}>{row.offset}</Text>
                     </View>
                   ))}
                 </View>
               </View>
             )}
 
-            {/* TAB: GAIN STAGING */}
-            {studioTab === 'gain' && (
-              <View style={styles.studioCard}>
-                <Text style={styles.studioSectionTitle}>⚡ Multimeter Target AC Voltages</Text>
-                <Text style={styles.studioSubNote}>
-                  Set {headUnit.name} Volume to 75% (Vol 30/40) and EQ Flat before probing amplifier terminals:
+            {/* TAB 2: BEZIER EQUALIZER CURVE */}
+            {studioTab === 'eq' && (
+              <View style={styles.glassCard}>
+                <Text style={styles.cardTitle}>🎚️ 14-Band Parametric Spline Equalizer</Text>
+                <Text style={styles.cardSubNote}>
+                  Interactive continuous spline curve matching {headUnit.name} sliders:
                 </Text>
 
-                <View style={styles.gainRowGrid}>
-                  <View style={styles.gainCol}>
-                    <Text style={styles.gainTitle}>Front Channels (CH1/2)</Text>
-                    <Text style={styles.gainVoltage}>{vFront} V AC</Text>
-                    <Text style={styles.gainTone}>Tone: 1 kHz 0dB Sine</Text>
+                {Platform.OS === 'web' && (
+                  <View style={styles.canvasContainer}>
+                    <canvas
+                      ref={eqCanvasRef}
+                      width={650}
+                      height={180}
+                      style={{ width: '100%', maxWidth: 650, height: 180, borderRadius: 10 }}
+                    />
+                  </View>
+                )}
+
+                {/* 14 Sliders */}
+                <View style={styles.sliderRack}>
+                  {EQ_FREQUENCIES.map((freq, idx) => {
+                    const gain = eqGains[idx];
+                    return (
+                      <View key={freq} style={styles.sliderCol}>
+                        <TouchableOpacity style={styles.stepperBtn} onPress={() => updateGain(idx, 0.5)}>
+                          <Text style={styles.stepperBtnText}>+</Text>
+                        </TouchableOpacity>
+
+                        <View style={styles.sliderBarTrack}>
+                          <View
+                            style={[
+                              styles.sliderBarFill,
+                              {
+                                height: `${Math.abs(gain) * 7 + 8}%`,
+                                backgroundColor: gain > 0 ? '#06b6d4' : gain < 0 ? '#ef4444' : '#64748b',
+                                bottom: gain < 0 ? undefined : '50%',
+                                top: gain < 0 ? '50%' : undefined
+                              }
+                            ]}
+                          />
+                          <View style={styles.sliderZero} />
+                        </View>
+
+                        <TouchableOpacity style={styles.stepperBtn} onPress={() => updateGain(idx, -0.5)}>
+                          <Text style={styles.stepperBtnText}>-</Text>
+                        </TouchableOpacity>
+
+                        <Text style={[styles.gainNumber, gain > 0 && styles.textCyan, gain < 0 && styles.textRed]}>
+                          {gain > 0 ? `+${gain}` : gain}
+                        </Text>
+                        <Text style={styles.freqTag}>{freq >= 1000 ? `${freq / 1000}k` : freq}</Text>
+                      </View>
+                    );
+                  })}
+                </View>
+
+                <View style={styles.insightBox}>
+                  <Text style={styles.insightTitle}>💡 Target Acoustic Adjustments:</Text>
+                  <Text style={styles.insightText}>• <Text style={styles.textWhite}>+5.5 dB @ 63Hz</Text>: 35Hz ported box bass resonance boost.</Text>
+                  <Text style={styles.insightText}>• <Text style={styles.textWhite}>-1.5 dB @ 200Hz</Text>: Compact SUV cabin standing-wave notch.</Text>
+                  <Text style={styles.insightText}>• <Text style={styles.textWhite}>-1.0 dB @ 4kHz</Text>: Windshield acoustic reflection tamer.</Text>
+                </View>
+              </View>
+            )}
+
+            {/* TAB 3: CROSSOVERS & DIALS */}
+            {studioTab === 'crossover' && (
+              <View style={styles.glassCard}>
+                <Text style={styles.cardTitle}>🎛️ Physical Amplifier Filter Dials & Crossovers</Text>
+
+                <View style={styles.filterCard}>
+                  <Text style={styles.filterCardHead}>Front Channels (Sony XS-162GS Components)</Text>
+                  <Text style={styles.filterValue}>HPF: ~{frontHpf} Hz (Approx. 9:30 o'clock)</Text>
+                  <Text style={styles.filterDesc}>Filters out bass sub-80Hz to protect 45W RMS woofers and ensure crystal clear vocal midrange.</Text>
+                </View>
+
+                <View style={styles.filterCard}>
+                  <Text style={styles.filterCardHead}>Rear Channels (Attenuated Rear Fill)</Text>
+                  <Text style={styles.filterValue}>HPF: ~{rearHpf} Hz (Approx. 10:00 o'clock)</Text>
+                  <Text style={styles.filterDesc}>Attenuated (-4dB) spatial ambient fill that doesn't pull the vocal stage backward.</Text>
+                </View>
+
+                <View style={[styles.filterCard, styles.filterCardAmber]}>
+                  <Text style={[styles.filterCardHead, { color: '#f59e0b' }]}>Subwoofer ({sub.name})</Text>
+                  <Text style={styles.filterValue}>LPF (Low Pass): ~{subLpf} Hz</Text>
+                  <Text style={styles.filterValue}>Subsonic Filter: ~{subsonicHz} Hz</Text>
+                  {sub.type === 'ported' && (
+                    <Text style={styles.subsonicWarning}>
+                      ⚠️ PORTED SAFETY: Frequencies below {sub.tune}Hz cause cone unloading. The {subsonicHz}Hz subsonic filter prevents coil destruction.
+                    </Text>
+                  )}
+                  <Text style={styles.filterDesc}>Bass Boost: MUST BE SET TO 0 dB (OFF).</Text>
+                </View>
+              </View>
+            )}
+
+            {/* TAB 4: MULTIMETER VOLTAGES */}
+            {studioTab === 'gain' && (
+              <View style={styles.glassCard}>
+                <Text style={styles.cardTitle}>⚡ Multimeter Target AC Voltages (V = √(P × R))</Text>
+                <Text style={styles.cardSubNote}>
+                  Set {headUnit.name} volume to 75% (Vol 30) with flat EQ before measuring amplifier terminals:
+                </Text>
+
+                <View style={styles.voltageGrid}>
+                  <View style={styles.voltageBox}>
+                    <Text style={styles.voltageLabel}>Front Channels (CH1/2)</Text>
+                    <Text style={styles.voltageNumber}>{vFront} V AC</Text>
+                    <Text style={styles.voltageTone}>Test Tone: 1,000 Hz 0dB Sine</Text>
+                    <Text style={styles.voltageKnob}>Knob Position: ~10:30 o'clock</Text>
                   </View>
 
-                  <View style={styles.gainCol}>
-                    <Text style={styles.gainTitle}>Rear Channels (CH3/4)</Text>
-                    <Text style={styles.gainVoltage}>{vRear} V AC</Text>
-                    <Text style={styles.gainTone}>Tone: 1 kHz 0dB Sine</Text>
+                  <View style={styles.voltageBox}>
+                    <Text style={styles.voltageLabel}>Rear Channels (CH3/4)</Text>
+                    <Text style={styles.voltageNumber}>{vRear} V AC</Text>
+                    <Text style={styles.voltageTone}>Test Tone: 1,000 Hz 0dB Sine</Text>
+                    <Text style={styles.voltageKnob}>Knob Position: ~9:30 o'clock</Text>
                   </View>
 
-                  <View style={styles.gainCol}>
-                    <Text style={styles.gainTitle}>Subwoofer Channel</Text>
-                    <Text style={styles.gainVoltage}>{vSub} V AC</Text>
-                    <Text style={styles.gainTone}>Tone: 50 Hz 0dB Sine</Text>
+                  <View style={styles.voltageBox}>
+                    <Text style={styles.voltageLabel}>Subwoofer Channel</Text>
+                    <Text style={styles.voltageNumber}>{vSub} V AC</Text>
+                    <Text style={styles.voltageTone}>Test Tone: 50 Hz 0dB Sine</Text>
+                    <Text style={styles.voltageKnob}>Knob Position: ~11:30 o'clock</Text>
                   </View>
                 </View>
               </View>
             )}
 
-            {/* TAB: TEST TONES */}
+            {/* TAB 5: AUDIO TONE GENERATOR */}
             {studioTab === 'tones' && (
-              <View style={styles.studioCard}>
-                <Text style={styles.studioSectionTitle}>🔊 In-Browser Audio Tone Generator</Text>
-                <Text style={styles.studioSubNote}>Play precision sine waves and pink noise through your car speakers:</Text>
+              <View style={styles.glassCard}>
+                <Text style={styles.cardTitle}>🔊 In-Browser Audio Test Tone Generator</Text>
+                <Text style={styles.cardSubNote}>
+                  Connect via Bluetooth/Aux to play precision calibration tones in your car:
+                </Text>
 
-                <View style={styles.toneButtonGrid}>
+                <View style={styles.toneList}>
                   <TouchableOpacity
-                    style={[styles.toneActionBtn, isPlayingTone === '1000' && styles.toneActionBtnActive]}
+                    style={[styles.toneCardBtn, isPlayingTone === '1000' && styles.toneCardBtnActive]}
                     onPress={() => playTone('1000', 1000)}
                   >
-                    <Text style={styles.toneActionTitle}>1,000 Hz (1 kHz) Sine</Text>
-                    <Text style={styles.toneActionSub}>For setting Front/Rear speaker amplifier gains</Text>
-                    <Text style={styles.toneActionStatus}>{isPlayingTone === '1000' ? '⏹️ STOPPING' : '▶️ PLAY 1 kHz'}</Text>
+                    <Text style={styles.toneCardTitle}>1,000 Hz (1 kHz) Sine Wave (0 dB)</Text>
+                    <Text style={styles.toneCardSub}>Used for measuring Front/Rear speaker amplifier AC voltage (13.4V)</Text>
+                    <Text style={styles.toneCardStatus}>{isPlayingTone === '1000' ? '⏹️ STOPPING' : '▶️ PLAY 1 kHz'}</Text>
                   </TouchableOpacity>
 
                   <TouchableOpacity
-                    style={[styles.toneActionBtn, isPlayingTone === '50' && styles.toneActionBtnActive]}
+                    style={[styles.toneCardBtn, isPlayingTone === '50' && styles.toneCardBtnActive]}
                     onPress={() => playTone('50', 50)}
                   >
-                    <Text style={styles.toneActionTitle}>50 Hz Sine Wave</Text>
-                    <Text style={styles.toneActionSub}>For setting Subwoofer amplifier gain</Text>
-                    <Text style={styles.toneActionStatus}>{isPlayingTone === '50' ? '⏹️ STOPPING' : '▶️ PLAY 50 Hz'}</Text>
+                    <Text style={styles.toneCardTitle}>50 Hz Sine Wave (0 dB)</Text>
+                    <Text style={styles.toneCardSub}>Used for measuring Subwoofer amplifier AC voltage (44.7V)</Text>
+                    <Text style={styles.toneCardStatus}>{isPlayingTone === '50' ? '⏹️ STOPPING' : '▶️ PLAY 50 Hz'}</Text>
                   </TouchableOpacity>
 
                   <TouchableOpacity
-                    style={[styles.toneActionBtn, isPlayingTone === 'pink' && styles.toneActionBtnActive]}
+                    style={[styles.toneCardBtn, isPlayingTone === 'pink' && styles.toneCardBtnActive]}
                     onPress={() => playTone('pink')}
                   >
-                    <Text style={styles.toneActionTitle}>Pink Noise</Text>
-                    <Text style={styles.toneActionSub}>Full-spectrum acoustic RTA measurement tone</Text>
-                    <Text style={styles.toneActionStatus}>{isPlayingTone === 'pink' ? '⏹️ STOPPING' : '▶️ PLAY NOISE'}</Text>
+                    <Text style={styles.toneCardTitle}>Pink Noise (20 Hz – 20 kHz)</Text>
+                    <Text style={styles.toneCardSub}>Full-spectrum acoustic test tone for RTA microphone measurement</Text>
+                    <Text style={styles.toneCardStatus}>{isPlayingTone === 'pink' ? '⏹️ STOPPING' : '▶️ PLAY NOISE'}</Text>
                   </TouchableOpacity>
                 </View>
 
                 {isPlayingTone && (
-                  <TouchableOpacity style={styles.stopToneBtn} onPress={stopTone}>
-                    <Text style={styles.stopToneBtnText}>⏹️ STOP ALL AUDIO PLAYBACK</Text>
+                  <TouchableOpacity style={styles.stopGlobalBtn} onPress={stopTone}>
+                    <Text style={styles.stopGlobalBtnText}>⏹️ STOP ALL AUDIO PLAYBACK</Text>
                   </TouchableOpacity>
                 )}
               </View>
             )}
 
-            {/* TAB: DSP EXPORT */}
+            {/* TAB 6: DSP FILE EXPORT */}
             {studioTab === 'export' && (
-              <View style={styles.studioCard}>
-                <Text style={styles.studioSectionTitle}>📤 Export Ready-to-Flash DSP Config Files</Text>
+              <View style={styles.glassCard}>
+                <Text style={styles.cardTitle}>📤 Export Ready-to-Flash DSP Configurations</Text>
 
-                <View style={styles.exportCard}>
-                  <Text style={styles.exportTitle}>Pioneer DEH-80PRS XML</Text>
-                  <Text style={styles.exportSnippet}>
+                <View style={styles.codeExportCard}>
+                  <Text style={styles.codeExportTitle}>Pioneer DEH-80PRS XML Format</Text>
+                  <Text style={styles.codeExportBody}>
                     {`<PioneerDSPConfig version="1.0">\n  <Car>${car.make} ${car.model}</Car>\n  <TimeAlignment FR="${delaysMs.FR}ms" FL="${delaysMs.FL}ms" SUB="0ms"/>\n  <Crossover HPF="${frontHpf}Hz" LPF="${subLpf}Hz" Subsonic="${subsonicHz}Hz"/>\n</PioneerDSPConfig>`}
                   </Text>
                 </View>
 
-                <View style={styles.exportCard}>
-                  <Text style={styles.exportTitle}>MiniDSP 2x4 HD / C-DSP JSON</Text>
-                  <Text style={styles.exportSnippet}>
+                <View style={styles.codeExportCard}>
+                  <Text style={styles.codeExportTitle}>MiniDSP 2x4 HD JSON Format</Text>
+                  <Text style={styles.codeExportBody}>
                     {`{\n  "vehicle": "${car.make} ${car.model}",\n  "delays_ms": { "FR": ${delaysMs.FR}, "FL": ${delaysMs.FL}, "SUB": 0 },\n  "crossover": { "front_hpf": ${frontHpf}, "sub_lpf": ${subLpf} }\n}`}
                   </Text>
                 </View>
@@ -751,9 +1112,9 @@ export default function AppMainScreen() {
         )}
 
         {/* FOOTER */}
-        <View style={styles.footer}>
-          <Text style={styles.footerText}>CarAudioAI • Built with ❤️ for the Indian Car Audio Community</Text>
-          <Text style={styles.footerSub}>Open Source on GitHub (adityashm/CarAudioAI)</Text>
+        <View style={styles.luxuryFooter}>
+          <Text style={styles.footerBrand}>CarAudioAI • Precision Automotive Acoustic Intelligence</Text>
+          <Text style={styles.footerNote}>Open-source on GitHub (adityashm/CarAudioAI)</Text>
         </View>
 
       </ScrollView>
@@ -764,7 +1125,7 @@ export default function AppMainScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#030712'
+    backgroundColor: '#020617'
   },
   scrollContainer: {
     paddingBottom: 60
@@ -773,96 +1134,118 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 20,
+    paddingHorizontal: 22,
     paddingVertical: 14,
-    backgroundColor: '#030712',
+    backgroundColor: 'rgba(2, 6, 23, 0.95)',
     borderBottomWidth: 1,
-    borderBottomColor: '#1e293b'
+    borderBottomColor: 'rgba(255, 255, 255, 0.08)'
   },
-  logoRow: {
+  logoGroup: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6
+    gap: 8
   },
-  logoDot: {
+  logoPulseRing: {
     width: 10,
     height: 10,
     borderRadius: 5,
     backgroundColor: '#06b6d4'
   },
-  logoText: {
+  logoBrand: {
     fontSize: 18,
     fontWeight: '900',
     color: '#ffffff',
     letterSpacing: 0.5
   },
-  logoHighlight: {
+  cyanAccent: {
     color: '#06b6d4'
   },
-  navBadge: {
-    backgroundColor: '#1e293b',
+  proTag: {
+    backgroundColor: 'rgba(6, 182, 212, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(6, 182, 212, 0.3)',
     paddingHorizontal: 6,
     paddingVertical: 2,
-    borderRadius: 4,
-    marginLeft: 4
+    borderRadius: 4
   },
-  navBadgeText: {
+  proTagText: {
     color: '#38bdf8',
     fontSize: 9,
     fontWeight: 'bold'
   },
-  navLinks: {
+  navActionGroup: {
     flexDirection: 'row',
     gap: 8
   },
-  navBtn: {
+  navPill: {
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 6
+    borderRadius: 8
   },
-  navBtnActive: {
+  navPillActive: {
     backgroundColor: '#1e293b'
   },
-  navBtnText: {
+  navPillText: {
     color: '#94a3b8',
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '600'
   },
-  navBtnTextActive: {
+  navPillTextActive: {
     color: '#ffffff'
   },
-  landingContent: {
-    paddingHorizontal: 20,
-    paddingTop: 30
+  viewContent: {
+    paddingHorizontal: 18,
+    paddingTop: 24
   },
-  heroSection: {
+  cinematicHero: {
     alignItems: 'center',
+    position: 'relative',
     marginBottom: 40
   },
+  glowBlob1: {
+    position: 'absolute',
+    top: -40,
+    left: '15%',
+    width: 200,
+    height: 200,
+    borderRadius: 100,
+    backgroundColor: 'rgba(6, 182, 212, 0.12)',
+    filter: 'blur(50px)' as any
+  },
+  glowBlob2: {
+    position: 'absolute',
+    top: 40,
+    right: '15%',
+    width: 220,
+    height: 220,
+    borderRadius: 110,
+    backgroundColor: 'rgba(139, 92, 246, 0.10)',
+    filter: 'blur(60px)' as any
+  },
   heroBadge: {
-    backgroundColor: 'rgba(6, 182, 212, 0.1)',
+    backgroundColor: 'rgba(6, 182, 212, 0.08)',
     borderWidth: 1,
     borderColor: '#06b6d4',
     paddingHorizontal: 14,
-    paddingVertical: 6,
+    paddingVertical: 5,
     borderRadius: 20,
     marginBottom: 16
   },
   heroBadgeText: {
     color: '#06b6d4',
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: 'bold',
     letterSpacing: 1
   },
   heroHeadline: {
-    fontSize: 32,
+    fontSize: 34,
     fontWeight: '900',
     color: '#ffffff',
     textAlign: 'center',
-    lineHeight: 40,
-    marginBottom: 16
+    lineHeight: 42,
+    marginBottom: 14
   },
-  gradientText: {
+  gradientCyan: {
     color: '#06b6d4'
   },
   heroSubhead: {
@@ -870,330 +1253,387 @@ const styles = StyleSheet.create({
     color: '#94a3b8',
     textAlign: 'center',
     lineHeight: 22,
-    maxWidth: 600,
+    maxWidth: 620,
     marginBottom: 24
   },
-  heroCtaRow: {
+  heroBtnRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'center',
     gap: 12,
-    marginBottom: 30
+    marginBottom: 32
   },
-  ctaPrimary: {
+  primaryGlowBtn: {
     backgroundColor: '#06b6d4',
     paddingHorizontal: 24,
     paddingVertical: 14,
-    borderRadius: 8
+    borderRadius: 8,
+    shadowColor: '#06b6d4',
+    shadowOpacity: 0.4,
+    shadowRadius: 15
   },
-  ctaPrimaryText: {
-    color: '#030712',
+  primaryGlowBtnText: {
+    color: '#020617',
     fontSize: 14,
     fontWeight: 'bold'
   },
-  ctaSecondary: {
-    backgroundColor: '#1e293b',
+  ghostGlowBtn: {
+    backgroundColor: '#0f172a',
     borderWidth: 1,
     borderColor: '#334155',
     paddingHorizontal: 20,
     paddingVertical: 14,
     borderRadius: 8
   },
-  ctaSecondaryText: {
+  ghostGlowBtnText: {
     color: '#ffffff',
     fontSize: 14,
     fontWeight: '600'
   },
-  statsStrip: {
+  videoShowcaseContainer: {
+    width: '100%',
+    maxWidth: 720,
+    backgroundColor: '#0a101f',
+    borderWidth: 1,
+    borderColor: 'rgba(6, 182, 212, 0.3)',
+    borderRadius: 16,
+    overflow: 'hidden',
+    position: 'relative',
+    marginBottom: 24
+  },
+  videoShowcaseHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    backgroundColor: '#070b14',
+    borderBottomWidth: 1,
+    borderBottomColor: '#1e293b',
+    gap: 6
+  },
+  videoDotRed: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#ef4444' },
+  videoDotYellow: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#f59e0b' },
+  videoDotGreen: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#10b981' },
+  videoHeaderTitle: {
+    color: '#64748b',
+    fontSize: 10,
+    fontFamily: 'monospace',
+    marginLeft: 8
+  },
+  simulationPreview: {
+    height: 180,
+    backgroundColor: '#070d18',
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative'
+  },
+  hudMetricTopLeft: {
+    position: 'absolute',
+    top: 12,
+    left: 14
+  },
+  hudMetricTopRight: {
+    position: 'absolute',
+    top: 12,
+    right: 14,
+    alignItems: 'flex-end'
+  },
+  hudLabel: {
+    color: '#64748b',
+    fontSize: 9,
+    fontFamily: 'monospace'
+  },
+  hudValue: {
+    color: '#10b981',
+    fontSize: 12,
+    fontWeight: 'bold',
+    fontFamily: 'monospace'
+  },
+  hudValueCyan: {
+    color: '#06b6d4',
+    fontSize: 12,
+    fontWeight: 'bold',
+    fontFamily: 'monospace'
+  },
+  centerSimulationPulse: {
+    alignItems: 'center'
+  },
+  pulseIcon: {
+    fontSize: 32,
+    marginBottom: 4
+  },
+  pulseTag: {
+    color: '#ffffff',
+    fontSize: 14,
+    fontWeight: 'bold'
+  },
+  pulseSub: {
+    color: '#38bdf8',
+    fontSize: 11,
+    marginTop: 2
+  },
+  videoAmbientBacklight: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 4,
+    backgroundColor: '#06b6d4',
+    shadowColor: '#06b6d4',
+    shadowRadius: 10,
+    shadowOpacity: 0.8
+  },
+  statsBar: {
     flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'center',
-    backgroundColor: '#0f172a',
+    backgroundColor: '#0b1322',
     borderWidth: 1,
     borderColor: '#1e293b',
     borderRadius: 12,
-    paddingVertical: 16,
-    paddingHorizontal: 20,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
     width: '100%',
-    maxWidth: 650
+    maxWidth: 680
   },
-  statItem: {
+  statCell: {
     alignItems: 'center'
   },
-  statNumber: {
+  statVal: {
     color: '#06b6d4',
     fontSize: 22,
     fontWeight: 'bold'
   },
-  statLabel: {
+  statKey: {
     color: '#94a3b8',
     fontSize: 11,
     marginTop: 2
   },
-  statDivider: {
+  statSep: {
     width: 1,
-    height: 30,
+    height: 28,
     backgroundColor: '#1e293b'
   },
-  sectionContainer: {
+  sectionWrap: {
     marginBottom: 40
   },
-  sectionTag: {
+  sectionOverline: {
     color: '#06b6d4',
     fontSize: 11,
     fontWeight: 'bold',
     letterSpacing: 1.5,
     marginBottom: 4
   },
-  sectionTitle: {
+  sectionHeading: {
     color: '#ffffff',
     fontSize: 22,
     fontWeight: 'bold',
     marginBottom: 16
   },
-  comparisonGrid: {
+  cardsRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 14
   },
-  comparisonCardBad: {
+  cardUntuned: {
     flex: 1,
     minWidth: 280,
-    backgroundColor: 'rgba(239, 68, 68, 0.05)',
+    backgroundColor: 'rgba(239, 68, 68, 0.04)',
     borderWidth: 1,
     borderColor: 'rgba(239, 68, 68, 0.2)',
     borderRadius: 12,
     padding: 16
   },
-  cardHeaderBad: {
+  cardHeaderRed: {
     color: '#ef4444',
     fontSize: 15,
     fontWeight: 'bold',
     marginBottom: 10
   },
-  cardItemBad: {
+  bulletRed: {
     color: '#cbd5e1',
     fontSize: 12,
     lineHeight: 20,
     marginBottom: 6
   },
-  comparisonCardGood: {
+  cardTuned: {
     flex: 1,
     minWidth: 280,
-    backgroundColor: 'rgba(16, 185, 129, 0.05)',
+    backgroundColor: 'rgba(16, 185, 129, 0.04)',
     borderWidth: 1,
     borderColor: 'rgba(16, 185, 129, 0.2)',
     borderRadius: 12,
     padding: 16
   },
-  cardHeaderGood: {
+  cardHeaderGreen: {
     color: '#10b981',
     fontSize: 15,
     fontWeight: 'bold',
     marginBottom: 10
   },
-  cardItemGood: {
+  bulletGreen: {
     color: '#cbd5e1',
     fontSize: 12,
     lineHeight: 20,
     marginBottom: 6
   },
-  bentoGrid: {
+  bentoContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 14
   },
-  bentoCard: {
+  bentoBlock: {
     flex: 1,
-    minWidth: 280,
-    backgroundColor: '#0f172a',
+    minWidth: 260,
+    backgroundColor: '#0b1322',
     borderWidth: 1,
     borderColor: '#1e293b',
     borderRadius: 12,
     padding: 18
   },
-  bentoIcon: {
-    fontSize: 26,
+  bentoEmoji: {
+    fontSize: 24,
     marginBottom: 8
   },
-  bentoTitle: {
+  bentoHead: {
     color: '#ffffff',
     fontSize: 15,
     fontWeight: 'bold',
     marginBottom: 6
   },
-  bentoDesc: {
+  bentoBody: {
     color: '#94a3b8',
     fontSize: 12,
     lineHeight: 18
   },
-  pricingGrid: {
+  pricingRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 14
   },
-  pricingCard: {
+  priceBox: {
     flex: 1,
     minWidth: 260,
-    backgroundColor: '#0f172a',
+    backgroundColor: '#0b1322',
     borderWidth: 1,
     borderColor: '#1e293b',
     borderRadius: 12,
     padding: 20
   },
-  pricingCardFeatured: {
+  priceBoxPopular: {
     borderColor: '#06b6d4',
-    backgroundColor: '#0b192c'
+    backgroundColor: '#081a2e'
   },
-  featuredBadge: {
+  popularBadge: {
     alignSelf: 'flex-start',
     backgroundColor: '#06b6d4',
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 4,
-    marginBottom: 10
+    marginBottom: 8
   },
-  featuredBadgeText: {
-    color: '#030712',
+  popularBadgeText: {
+    color: '#020617',
     fontSize: 9,
     fontWeight: 'bold'
   },
-  planName: {
+  tierName: {
     color: '#ffffff',
     fontSize: 16,
     fontWeight: 'bold'
   },
-  planPrice: {
+  tierPrice: {
     color: '#06b6d4',
     fontSize: 28,
     fontWeight: '900',
-    marginVertical: 6
+    marginVertical: 4
   },
-  pricePer: {
+  tierMonth: {
     fontSize: 13,
     color: '#94a3b8',
     fontWeight: 'normal'
   },
-  planDesc: {
+  tierSub: {
     color: '#94a3b8',
     fontSize: 12,
     marginBottom: 12
   },
-  planDivider: {
+  tierLine: {
     height: 1,
     backgroundColor: '#1e293b',
     marginBottom: 12
   },
-  planFeature: {
+  tierItem: {
     color: '#cbd5e1',
     fontSize: 12,
     lineHeight: 22
   },
-  planBtnPrimary: {
+  tierBtnPrimary: {
     backgroundColor: '#06b6d4',
     paddingVertical: 10,
     borderRadius: 6,
     alignItems: 'center',
     marginTop: 18
   },
-  planBtnTextPrimary: {
-    color: '#030712',
+  tierBtnTextPri: {
+    color: '#020617',
     fontWeight: 'bold',
     fontSize: 13
   },
-  planBtnSecondary: {
+  tierBtnSecondary: {
     backgroundColor: '#1e293b',
     paddingVertical: 10,
     borderRadius: 6,
     alignItems: 'center',
     marginTop: 18
   },
-  planBtnTextSecondary: {
+  tierBtnTextSec: {
     color: '#ffffff',
     fontWeight: '600',
     fontSize: 13
   },
-  ctaBanner: {
-    backgroundColor: '#0b192c',
-    borderWidth: 1,
-    borderColor: '#06b6d4',
-    borderRadius: 16,
-    padding: 26,
-    alignItems: 'center',
-    textAlign: 'center',
-    marginBottom: 20
-  },
-  ctaBannerTitle: {
-    color: '#ffffff',
-    fontSize: 20,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: 6
-  },
-  ctaBannerSubtitle: {
-    color: '#94a3b8',
-    fontSize: 13,
-    textAlign: 'center',
-    maxWidth: 500,
-    marginBottom: 16
-  },
-  ctaBannerBtn: {
-    backgroundColor: '#06b6d4',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 8
-  },
-  ctaBannerBtnText: {
-    color: '#030712',
-    fontSize: 14,
-    fontWeight: 'bold'
-  },
 
   // STUDIO STYLES
-  studioContent: {
-    paddingHorizontal: 16,
-    paddingTop: 16
-  },
-  studioCard: {
-    backgroundColor: '#0f172a',
-    borderRadius: 12,
+  glassCard: {
+    backgroundColor: '#0a101f',
+    borderRadius: 14,
     padding: 16,
     marginBottom: 16,
     borderWidth: 1,
     borderColor: '#1e293b'
   },
-  studioCardHeaderRow: {
+  cardHeaderFlex: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 12
   },
-  studioSectionTitle: {
+  cardTitle: {
     color: '#ffffff',
     fontSize: 15,
     fontWeight: 'bold'
   },
-  studioSubNote: {
+  cardSubNote: {
     color: '#94a3b8',
     fontSize: 12,
     marginBottom: 14
   },
-  chip: {
+  pillBadge: {
     backgroundColor: '#1e293b',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 6
   },
-  chipText: {
+  pillBadgeText: {
     color: '#38bdf8',
     fontSize: 10,
     fontWeight: 'bold'
   },
-  carScroll: {
+  carPickerScroll: {
     flexDirection: 'row'
   },
-  carCardBtn: {
-    backgroundColor: '#0b1322',
+  carOptionCard: {
+    backgroundColor: '#070d18',
     borderWidth: 1,
     borderColor: '#1e293b',
     borderRadius: 8,
@@ -1201,133 +1641,222 @@ const styles = StyleSheet.create({
     marginRight: 10,
     minWidth: 130
   },
-  carCardBtnActive: {
+  carOptionCardActive: {
     borderColor: '#06b6d4',
     backgroundColor: '#092137'
   },
-  carCardMake: {
+  carOptionMake: {
     color: '#94a3b8',
     fontSize: 11
   },
-  carCardModel: {
+  carOptionModel: {
     color: '#ffffff',
     fontSize: 13,
     fontWeight: 'bold',
     marginVertical: 2
   },
-  carCardDim: {
+  carOptionSpec: {
     color: '#64748b',
     fontSize: 9
   },
-  configLabel: {
+  subConfigLabel: {
     color: '#38bdf8',
     fontSize: 12,
     fontWeight: 'bold',
     marginTop: 10,
     marginBottom: 6
   },
-  configOptionGrid: {
+  configOptionsRow: {
     gap: 6
   },
-  configOptionBtn: {
-    backgroundColor: '#131d2e',
+  configOptionChip: {
+    backgroundColor: '#0e172a',
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 6,
     borderWidth: 1,
     borderColor: '#1e293b'
   },
-  configOptionBtnActive: {
+  configOptionChipActive: {
     borderColor: '#06b6d4',
     backgroundColor: '#08253a'
   },
-  configOptionText: {
+  configOptionChipText: {
     color: '#94a3b8',
     fontSize: 11
   },
-  soundProfileRow: {
+  targetRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8
   },
-  soundProfileBtn: {
+  targetBtn: {
     flex: 1,
     minWidth: 200,
-    backgroundColor: '#131d2e',
+    backgroundColor: '#0e172a',
     padding: 12,
     borderRadius: 8,
     borderWidth: 1,
     borderColor: '#1e293b'
   },
-  soundProfileBtnActive: {
+  targetBtnActive: {
     backgroundColor: '#06b6d4',
     borderColor: '#06b6d4'
   },
-  soundProfileTitle: {
+  targetBtnTitle: {
     color: '#ffffff',
     fontWeight: 'bold',
     fontSize: 12,
     marginBottom: 2
   },
-  soundProfileDesc: {
+  targetBtnDesc: {
     color: '#94a3b8',
     fontSize: 10
   },
-  studioNavTabs: {
+  toolNavStrip: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 6,
     marginBottom: 16
   },
-  studioNavTabBtn: {
+  toolNavPill: {
     paddingHorizontal: 12,
     paddingVertical: 8,
-    backgroundColor: '#0f172a',
+    backgroundColor: '#0a101f',
     borderRadius: 20,
     borderWidth: 1,
     borderColor: '#1e293b'
   },
-  studioNavTabBtnActive: {
+  toolNavPillActive: {
     backgroundColor: '#06b6d4',
     borderColor: '#06b6d4'
   },
-  studioNavTabText: {
+  toolNavPillText: {
     color: '#94a3b8',
     fontSize: 11,
     fontWeight: '600'
   },
-  studioNavTabTextActive: {
-    color: '#030712',
+  toolNavPillTextActive: {
+    color: '#020617',
     fontWeight: 'bold'
   },
-  eqGrid: {
+  toggleBtn: {
+    backgroundColor: '#1e293b',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 6
+  },
+  toggleBtnActive: {
+    backgroundColor: '#064e3b'
+  },
+  toggleBtnText: {
+    color: '#ffffff',
+    fontSize: 11,
+    fontWeight: 'bold'
+  },
+  canvasContainer: {
+    alignItems: 'center',
+    marginVertical: 8,
+    backgroundColor: '#070d18',
+    borderRadius: 12,
+    padding: 6
+  },
+  fallbackNotice: {
+    backgroundColor: '#0e172a',
+    padding: 14,
+    borderRadius: 8,
+    alignItems: 'center'
+  },
+  fallbackText: {
+    color: '#94a3b8',
+    fontSize: 12
+  },
+  delayTable: {
+    borderWidth: 1,
+    borderColor: '#1e293b',
+    borderRadius: 8,
+    overflow: 'hidden',
+    marginTop: 12
+  },
+  delayHeader: {
+    flexDirection: 'row',
+    backgroundColor: '#1e293b',
+    padding: 8
+  },
+  delayTh: {
+    flex: 1,
+    color: '#94a3b8',
+    fontSize: 10,
+    fontWeight: 'bold'
+  },
+  delayRow: {
+    flexDirection: 'row',
+    padding: 8,
+    backgroundColor: '#0a101f'
+  },
+  delayRowAlt: {
+    backgroundColor: '#0e172a'
+  },
+  delayTdName: {
+    flex: 1.2,
+    color: '#ffffff',
+    fontSize: 10,
+    fontWeight: '600'
+  },
+  delayTd: {
+    flex: 1,
+    color: '#94a3b8',
+    fontSize: 10
+  },
+  delayTdCyan: {
+    flex: 1,
+    color: '#06b6d4',
+    fontSize: 10,
+    fontWeight: 'bold'
+  },
+  sliderRack: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    backgroundColor: '#030712',
+    backgroundColor: '#060a12',
     padding: 10,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#1e293b'
+    borderColor: '#1e293b',
+    marginTop: 12
   },
-  eqCol: {
+  sliderCol: {
     alignItems: 'center',
     flex: 1
   },
-  eqTrack: {
+  stepperBtn: {
+    width: 18,
+    height: 18,
+    backgroundColor: '#1e293b',
+    borderRadius: 4,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginVertical: 2
+  },
+  stepperBtnText: {
+    color: '#ffffff',
+    fontSize: 11,
+    fontWeight: 'bold'
+  },
+  sliderBarTrack: {
     width: 6,
-    height: 80,
+    height: 70,
     backgroundColor: '#1e293b',
     borderRadius: 3,
     position: 'relative',
-    marginVertical: 4
+    marginVertical: 2
   },
-  eqBar: {
+  sliderBarFill: {
     position: 'absolute',
     left: 0,
     right: 0,
     borderRadius: 3
   },
-  eqZeroLine: {
+  sliderZero: {
     position: 'absolute',
     left: 0,
     right: 0,
@@ -1335,69 +1864,60 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: '#475569'
   },
-  eqGainText: {
+  gainNumber: {
     fontSize: 8,
     fontWeight: 'bold',
     color: '#cbd5e1'
   },
-  eqFreqText: {
+  freqTag: {
     fontSize: 7,
     color: '#64748b',
     marginTop: 2
   },
-  highlightBox: {
+  insightBox: {
     marginTop: 12,
-    backgroundColor: '#131d2e',
+    backgroundColor: '#0e172a',
     padding: 12,
     borderRadius: 8
   },
-  highlightBoxTitle: {
+  insightTitle: {
     color: '#38bdf8',
     fontWeight: 'bold',
     fontSize: 12,
     marginBottom: 4
   },
-  highlightBoxLine: {
+  insightText: {
     color: '#cbd5e1',
     fontSize: 11,
     lineHeight: 17
   },
-  boldWhite: {
-    color: '#ffffff',
-    fontWeight: 'bold'
-  },
-  dialCard: {
-    backgroundColor: '#131d2e',
+  filterCard: {
+    backgroundColor: '#0e172a',
     padding: 12,
     borderRadius: 8,
     marginBottom: 10
   },
-  dialCardAlert: {
+  filterCardAmber: {
     borderLeftWidth: 3,
     borderLeftColor: '#f59e0b'
   },
-  dialTitle: {
+  filterCardHead: {
     color: '#38bdf8',
     fontWeight: 'bold',
     fontSize: 12,
     marginBottom: 4
   },
-  dialValue: {
+  filterValue: {
     color: '#10b981',
     fontWeight: 'bold',
     fontSize: 14
   },
-  dialPosition: {
-    color: '#cbd5e1',
-    fontSize: 11,
-    marginTop: 2
-  },
-  dialNote: {
+  filterDesc: {
     color: '#94a3b8',
     fontSize: 11,
     marginTop: 4
   },
-  subsonicAlert: {
+  subsonicWarning: {
     color: '#f59e0b',
     fontSize: 10,
     backgroundColor: '#2b1e06',
@@ -1405,132 +1925,95 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     marginVertical: 4
   },
-  taTable: {
-    borderWidth: 1,
-    borderColor: '#1e293b',
-    borderRadius: 8,
-    overflow: 'hidden'
-  },
-  taTableHeader: {
-    flexDirection: 'row',
-    backgroundColor: '#1e293b',
-    padding: 8
-  },
-  taTh: {
-    flex: 1,
-    color: '#94a3b8',
-    fontSize: 10,
-    fontWeight: 'bold'
-  },
-  taTableRow: {
-    flexDirection: 'row',
-    padding: 8,
-    backgroundColor: '#0f172a'
-  },
-  taTableRowAlt: {
-    backgroundColor: '#131d2e'
-  },
-  taTdName: {
-    flex: 1.2,
-    color: '#ffffff',
-    fontSize: 10,
-    fontWeight: '600'
-  },
-  taTd: {
-    flex: 1,
-    color: '#94a3b8',
-    fontSize: 10
-  },
-  taTdHighlight: {
-    flex: 1,
-    color: '#10b981',
-    fontSize: 10,
-    fontWeight: 'bold'
-  },
-  gainRowGrid: {
+  voltageGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 10
   },
-  gainCol: {
+  voltageBox: {
     flex: 1,
     minWidth: 180,
-    backgroundColor: '#131d2e',
+    backgroundColor: '#0e172a',
     padding: 12,
     borderRadius: 8
   },
-  gainTitle: {
+  voltageLabel: {
     color: '#38bdf8',
     fontSize: 11,
     fontWeight: 'bold'
   },
-  gainVoltage: {
+  voltageNumber: {
     color: '#10b981',
     fontSize: 20,
     fontWeight: '900',
     marginVertical: 4
   },
-  gainTone: {
-    color: '#94a3b8',
-    fontSize: 10
+  voltageTone: {
+    color: '#cbd5e1',
+    fontSize: 11
   },
-  toneButtonGrid: {
+  voltageKnob: {
+    color: '#64748b',
+    fontSize: 10,
+    marginTop: 2
+  },
+  toneList: {
     gap: 8
   },
-  toneActionBtn: {
-    backgroundColor: '#131d2e',
+  toneCardBtn: {
+    backgroundColor: '#0e172a',
     padding: 12,
     borderRadius: 8,
     borderWidth: 1,
     borderColor: '#1e293b'
   },
-  toneActionBtnActive: {
+  toneCardBtnActive: {
     backgroundColor: '#064e3b',
     borderColor: '#10b981'
   },
-  toneActionTitle: {
+  toneCardTitle: {
     color: '#ffffff',
     fontWeight: 'bold',
     fontSize: 13
   },
-  toneActionSub: {
+  toneCardSub: {
     color: '#94a3b8',
     fontSize: 11,
     marginTop: 2
   },
-  toneActionStatus: {
+  toneCardStatus: {
     color: '#38bdf8',
     fontSize: 11,
     fontWeight: 'bold',
     marginTop: 6
   },
-  stopToneBtn: {
+  stopGlobalBtn: {
     marginTop: 12,
     backgroundColor: '#ef4444',
     padding: 10,
     borderRadius: 6,
     alignItems: 'center'
   },
-  stopToneBtnText: {
+  stopGlobalBtnText: {
     color: '#ffffff',
     fontWeight: 'bold',
     fontSize: 12
   },
-  exportCard: {
-    backgroundColor: '#030712',
+  codeExportCard: {
+    backgroundColor: '#070d18',
     padding: 12,
     borderRadius: 8,
     borderWidth: 1,
     borderColor: '#1e293b',
     marginBottom: 10
   },
-  exportTitle: {
+  codeExportTitle: {
     color: '#38bdf8',
     fontWeight: 'bold',
     fontSize: 12,
     marginBottom: 6
   },
-  exportSnippet: {
+  codeExportBody: {
     color: '#cbd5e1',
     fontFamily: 'monospace',
     fontSize: 10,
@@ -1539,17 +2022,17 @@ const styles = StyleSheet.create({
   textWhite: { color: '#ffffff' },
   textCyan: { color: '#06b6d4' },
   textRed: { color: '#ef4444' },
-  textBlack: { color: '#030712' },
-  footer: {
-    marginTop: 30,
+  textBlack: { color: '#020617' },
+  luxuryFooter: {
+    marginTop: 36,
     alignItems: 'center'
   },
-  footerText: {
+  footerBrand: {
     color: '#64748b',
     fontSize: 11,
     fontWeight: '600'
   },
-  footerSub: {
+  footerNote: {
     color: '#475569',
     fontSize: 10,
     marginTop: 2

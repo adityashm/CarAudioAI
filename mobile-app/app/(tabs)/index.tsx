@@ -12,6 +12,16 @@ import {
   TextInput
 } from 'react-native';
 import HeroScrollSequence from '@/components/HeroScrollSequence';
+import AuthModal from '@/components/AuthModal';
+import PaymentModal from '@/components/PaymentModal';
+import RtaMeasurementModal from '@/components/RtaMeasurementModal';
+import { UserProfile, getCurrentUser } from '@/services/authService';
+import {
+  downloadPioneerXml,
+  downloadMiniDspJson,
+  generatePioneerXml,
+  generateMiniDspJson,
+} from '@/services/exportService';
 import {
   INDIAN_CAR_MAKES,
   HEAD_UNIT_OPTIONS,
@@ -29,6 +39,22 @@ const EQ_FREQUENCIES = [32, 63, 100, 200, 400, 630, 1000, 2000, 4000, 8000, 1000
 export default function AppMainScreen() {
   // Top-level Navigation View
   const [currentView, setCurrentView] = useState<'landing' | 'studio'>('landing');
+
+  // User Auth & Subscription Modals
+  const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
+  const [authModalVisible, setAuthModalVisible] = useState(false);
+  const [paymentModalVisible, setPaymentModalVisible] = useState(false);
+  const [rtaModalVisible, setRtaModalVisible] = useState(false);
+  const [xmlCopied, setXmlCopied] = useState(false);
+  const [jsonCopied, setJsonCopied] = useState(false);
+  const [exportFeedback, setExportFeedback] = useState<string | null>(null);
+
+  // Load authenticated user on mount
+  useEffect(() => {
+    getCurrentUser().then((user) => {
+      if (user) setCurrentUser(user);
+    });
+  }, []);
 
   // Wizard Step State (1: Make -> 2: Model -> 3: Equipment -> 4: Tuning Dashboard)
   const [wizardStep, setWizardStep] = useState<1 | 2 | 3 | 4>(1);
@@ -355,6 +381,90 @@ export default function AppMainScreen() {
     setIsPlayingTone(null);
   };
 
+  // Dynamic Pioneer XML and MiniDSP JSON Exports
+  const pioneerXmlString = generatePioneerXml({
+    vehicleName: `${selectedMake.name} ${selectedCar.model}`,
+    delaysMs,
+    frontHpf,
+    rearHpf,
+    subLpf,
+    subsonicHz,
+    eqGains,
+    eqFrequencies: EQ_FREQUENCIES,
+  });
+
+  const miniDspJsonString = generateMiniDspJson({
+    vehicleName: `${selectedMake.name} ${selectedCar.model}`,
+    delaysMs,
+    frontHpf,
+    rearHpf,
+    subLpf,
+    subsonicHz,
+    eqGains,
+    eqFrequencies: EQ_FREQUENCIES,
+  });
+
+  const handleDownloadPioneer = () => {
+    const success = downloadPioneerXml(
+      `${selectedMake.name}_${selectedCar.model}`,
+      pioneerXmlString
+    );
+    if (success) {
+      setExportFeedback('Downloaded Pioneer XML preset!');
+    } else {
+      setExportFeedback('Export generated for Pioneer DEH-80PRS.');
+    }
+    setTimeout(() => setExportFeedback(null), 3000);
+  };
+
+  const handleDownloadMiniDsp = () => {
+    const success = downloadMiniDspJson(
+      `${selectedMake.name}_${selectedCar.model}`,
+      miniDspJsonString
+    );
+    if (success) {
+      setExportFeedback('Downloaded MiniDSP JSON preset!');
+    } else {
+      setExportFeedback('Export generated for MiniDSP 2x4 HD.');
+    }
+    setTimeout(() => setExportFeedback(null), 3000);
+  };
+
+  const handleCopyXml = () => {
+    if (Platform.OS === 'web' && typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(pioneerXmlString);
+      setXmlCopied(true);
+      setTimeout(() => setXmlCopied(false), 2000);
+    }
+  };
+
+  const handleCopyJson = () => {
+    if (Platform.OS === 'web' && typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(miniDspJsonString);
+      setJsonCopied(true);
+      setTimeout(() => setJsonCopied(false), 2000);
+    }
+  };
+
+  const handleApplyRtaCuts = (cuts: { frequency_hz: number; recommended_eq_cut_db: number }[]) => {
+    setEqGains((prev) => {
+      const next = [...prev];
+      cuts.forEach((cut) => {
+        let closestIdx = 0;
+        let minDiff = Infinity;
+        EQ_FREQUENCIES.forEach((freq, idx) => {
+          const diff = Math.abs(freq - cut.frequency_hz);
+          if (diff < minDiff) {
+            minDiff = diff;
+            closestIdx = idx;
+          }
+        });
+        next[closestIdx] = +Math.max(-12, Math.min(12, next[closestIdx] + cut.recommended_eq_cut_db)).toFixed(1);
+      });
+      return next;
+    });
+  };
+
   const updateGain = (index: number, delta: number) => {
     setEqGains((prev) => {
       const next = [...prev];
@@ -400,8 +510,39 @@ export default function AppMainScreen() {
             }}
           >
             <Text style={[styles.navPillText, currentView === 'studio' && styles.navPillTextActive]}>
-              🎛️ Tuning Wizard & Studio
+              🎛️ Tuning Studio
             </Text>
+          </TouchableOpacity>
+
+          {/* User Profile / Login Modal Trigger */}
+          <TouchableOpacity
+            style={styles.userNavBtn}
+            onPress={() => setAuthModalVisible(true)}
+          >
+            <Text style={styles.userNavText}>
+              {currentUser ? `👤 ${currentUser.name?.split(' ')[0] || 'User'}` : '👤 Sign In'}
+            </Text>
+            {currentUser && (
+              <View style={[
+                styles.tierMicroBadge,
+                currentUser.subscription_tier === 'pro_monthly' ? styles.badgePro :
+                (currentUser.subscription_tier === 'pro_yearly' || currentUser.subscription_tier === 'installer') ? styles.badgeInstaller :
+                styles.badgeFree
+              ]}>
+                <Text style={styles.tierMicroText}>
+                  {currentUser.subscription_tier === 'pro_monthly' ? 'PRO' :
+                   (currentUser.subscription_tier === 'pro_yearly' || currentUser.subscription_tier === 'installer') ? 'INSTALLER' : 'FREE'}
+                </Text>
+              </View>
+            )}
+          </TouchableOpacity>
+
+          {/* Upgrade Modal Trigger */}
+          <TouchableOpacity
+            style={styles.upgradeNavBtn}
+            onPress={() => setPaymentModalVisible(true)}
+          >
+            <Text style={styles.upgradeNavText}>💎 Upgrade</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -424,7 +565,7 @@ export default function AppMainScreen() {
               </View>
 
               <Text style={styles.heroHeadline}>
-                Automotive Soundstage.<br />
+                Automotive Soundstage.{'\n'}
                 <Text style={styles.gradientCyan}>Engineered with AI.</Text>
               </Text>
 
@@ -924,6 +1065,16 @@ export default function AppMainScreen() {
                       <Text style={styles.insightText}>• <Text style={styles.textWhite}>-1.5 dB @ 200Hz</Text>: Eliminates {selectedCar.category} ({selectedCar.resonantFreqHz}Hz) standing cabin boom.</Text>
                       <Text style={styles.insightText}>• <Text style={styles.textWhite}>-1.0 dB @ 4kHz</Text>: Windshield acoustic reflection tamer.</Text>
                     </View>
+
+                    {/* RTA Measurement Trigger */}
+                    <TouchableOpacity
+                      style={styles.rtaStudioBtn}
+                      onPress={() => setRtaModalVisible(true)}
+                    >
+                      <Text style={styles.rtaStudioBtnText}>
+                        🎙️ Launch In-Cabin Acoustic RTA Analysis & Resonance Smoothing →
+                      </Text>
+                    </TouchableOpacity>
                   </View>
                 )}
 
@@ -1047,20 +1198,61 @@ export default function AppMainScreen() {
                 {/* TAB 6: DSP FILE EXPORT */}
                 {studioTab === 'export' && (
                   <View style={styles.glassCard}>
-                    <Text style={styles.cardTitle}>📤 Export Ready-to-Flash DSP Configurations</Text>
+                    <View style={styles.cardHeaderFlex}>
+                      <Text style={styles.cardTitle}>📤 Export Ready-to-Flash DSP Configurations</Text>
+                    </View>
+                    <Text style={styles.cardSubNote}>
+                      Download pre-formatted XML and JSON configuration files ready to flash directly to Pioneer DSP head units and MiniDSP processors.
+                    </Text>
 
+                    {exportFeedback && (
+                      <View style={styles.alertSuccess}>
+                        <Text style={styles.alertSuccessText}>✓ {exportFeedback}</Text>
+                      </View>
+                    )}
+
+                    {/* Pioneer XML Card */}
                     <View style={styles.codeExportCard}>
-                      <Text style={styles.codeExportTitle}>Pioneer DEH-80PRS XML Format</Text>
-                      <Text style={styles.codeExportBody}>
-                        {`<PioneerDSPConfig version="1.0">\n  <Car>${selectedMake.name} ${selectedCar.model}</Car>\n  <TimeAlignment FR="${delaysMs.FR}ms" FL="${delaysMs.FL}ms" SUB="0ms"/>\n  <Crossover HPF="${frontHpf}Hz" LPF="${subLpf}Hz" Subsonic="${subsonicHz}Hz"/>\n</PioneerDSPConfig>`}
-                      </Text>
+                      <View style={styles.codeExportHeader}>
+                        <Text style={styles.codeExportTitle}>Pioneer DEH-80PRS XML Format</Text>
+                        <View style={styles.codeExportActions}>
+                          <TouchableOpacity
+                            style={styles.copyBtn}
+                            onPress={handleCopyXml}
+                          >
+                            <Text style={styles.copyBtnText}>{xmlCopied ? '✓ Copied' : '📋 Copy'}</Text>
+                          </TouchableOpacity>
+                          <TouchableOpacity
+                            style={styles.downloadBtn}
+                            onPress={handleDownloadPioneer}
+                          >
+                            <Text style={styles.downloadBtnText}>📥 Download Pioneer XML (.xml)</Text>
+                          </TouchableOpacity>
+                        </View>
+                      </View>
+                      <Text style={styles.codeExportBody}>{pioneerXmlString}</Text>
                     </View>
 
+                    {/* MiniDSP JSON Card */}
                     <View style={styles.codeExportCard}>
-                      <Text style={styles.codeExportTitle}>MiniDSP 2x4 HD JSON Format</Text>
-                      <Text style={styles.codeExportBody}>
-                        {`{\n  "vehicle": "${selectedMake.name} ${selectedCar.model}",\n  "delays_ms": { "FR": ${delaysMs.FR}, "FL": ${delaysMs.FL}, "SUB": 0 },\n  "crossover": { "front_hpf": ${frontHpf}, "sub_lpf": ${subLpf} }\n}`}
-                      </Text>
+                      <View style={styles.codeExportHeader}>
+                        <Text style={styles.codeExportTitle}>MiniDSP 2x4 HD JSON Format</Text>
+                        <View style={styles.codeExportActions}>
+                          <TouchableOpacity
+                            style={styles.copyBtn}
+                            onPress={handleCopyJson}
+                          >
+                            <Text style={styles.copyBtnText}>{jsonCopied ? '✓ Copied' : '📋 Copy'}</Text>
+                          </TouchableOpacity>
+                          <TouchableOpacity
+                            style={styles.downloadBtn}
+                            onPress={handleDownloadMiniDsp}
+                          >
+                            <Text style={styles.downloadBtnText}>📥 Download MiniDSP JSON (.json)</Text>
+                          </TouchableOpacity>
+                        </View>
+                      </View>
+                      <Text style={styles.codeExportBody}>{miniDspJsonString}</Text>
                     </View>
                   </View>
                 )}
@@ -1077,6 +1269,40 @@ export default function AppMainScreen() {
         </View>
 
       </ScrollView>
+
+      {/* AUTHENTICATION MODAL */}
+      <AuthModal
+        visible={authModalVisible}
+        onClose={() => setAuthModalVisible(false)}
+        onUserChange={(user) => setCurrentUser(user)}
+      />
+
+      {/* SUBSCRIPTION UPGRADE MODAL */}
+      <PaymentModal
+        visible={paymentModalVisible}
+        onClose={() => setPaymentModalVisible(false)}
+        currentUser={currentUser}
+        onPlanUpgraded={(newTier) => {
+          if (currentUser) {
+            setCurrentUser({ ...currentUser, subscription_tier: newTier });
+          } else {
+            setCurrentUser({
+              id: 1,
+              phone_number: '+919876543210',
+              name: 'Car Audio Enthusiast',
+              subscription_tier: newTier,
+            });
+          }
+        }}
+      />
+
+      {/* RTA ACOUSTIC MEASUREMENT MODAL */}
+      <RtaMeasurementModal
+        visible={rtaModalVisible}
+        onClose={() => setRtaModalVisible(false)}
+        carName={`${selectedMake.name} ${selectedCar.model}`}
+        onApplyCuts={handleApplyRtaCuts}
+      />
     </SafeAreaView>
   );
 }
@@ -1935,23 +2161,139 @@ const styles = StyleSheet.create({
   },
   codeExportCard: {
     backgroundColor: '#070d18',
-    padding: 12,
+    padding: 14,
     borderRadius: 8,
     borderWidth: 1,
     borderColor: '#1e293b',
-    marginBottom: 10
+    marginBottom: 14,
+  },
+  codeExportHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 10,
   },
   codeExportTitle: {
     color: '#38bdf8',
     fontWeight: 'bold',
-    fontSize: 12,
-    marginBottom: 6
+    fontSize: 13,
+  },
+  codeExportActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  copyBtn: {
+    backgroundColor: '#1e293b',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#334155',
+  },
+  copyBtnText: {
+    color: '#cbd5e1',
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  downloadBtn: {
+    backgroundColor: '#06b6d4',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+  },
+  downloadBtnText: {
+    color: '#020617',
+    fontSize: 11,
+    fontWeight: 'bold',
   },
   codeExportBody: {
     color: '#cbd5e1',
     fontFamily: 'monospace',
     fontSize: 10,
-    lineHeight: 15
+    lineHeight: 15,
+    backgroundColor: '#040711',
+    padding: 10,
+    borderRadius: 6,
+    overflow: 'hidden',
+  },
+  userNavBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#0f172a',
+    borderWidth: 1,
+    borderColor: '#1e293b',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    gap: 6,
+  },
+  userNavText: {
+    color: '#cbd5e1',
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  tierMicroBadge: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  badgeFree: {
+    backgroundColor: '#334155',
+  },
+  badgePro: {
+    backgroundColor: '#06b6d4',
+  },
+  badgeInstaller: {
+    backgroundColor: '#f59e0b',
+  },
+  tierMicroText: {
+    color: '#020617',
+    fontSize: 8,
+    fontWeight: '900',
+  },
+  upgradeNavBtn: {
+    backgroundColor: 'rgba(245, 158, 11, 0.15)',
+    borderWidth: 1,
+    borderColor: '#f59e0b',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+  upgradeNavText: {
+    color: '#f59e0b',
+    fontSize: 11,
+    fontWeight: 'bold',
+  },
+  rtaStudioBtn: {
+    marginTop: 12,
+    backgroundColor: '#0c2237',
+    borderWidth: 1,
+    borderColor: '#06b6d4',
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  rtaStudioBtnText: {
+    color: '#38bdf8',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  alertSuccess: {
+    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+    borderWidth: 1,
+    borderColor: '#10b981',
+    borderRadius: 8,
+    padding: 10,
+    marginBottom: 12,
+  },
+  alertSuccessText: {
+    color: '#10b981',
+    fontSize: 12,
+    fontWeight: 'bold',
   },
   textWhite: { color: '#ffffff' },
   textCyan: { color: '#06b6d4' },

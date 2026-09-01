@@ -2,13 +2,10 @@ import React, { useRef, useEffect, useState } from 'react';
 import { Platform, StyleSheet, View, Text, Image } from 'react-native';
 import { motion, useScroll, useTransform, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { tokens } from '../design-system/tokens';
-import { InstrumentPanel } from './ui/InstrumentPanel';
-import { Button } from './ui/Button';
-import { Readout } from './ui/Readout';
 
 // 8K Photorealistic Storyboard Shots
 const SHOT_IMAGES = [
-  require('@/assets/images/shot1_exterior.jpg'),
+  require('@/assets/images/turbotweak_hero_car.jpg'),
   require('@/assets/images/shot2_door_open.jpg'),
   require('@/assets/images/shot3_touchscreen.jpg'),
   require('@/assets/images/shot4_soundwaves.jpg'),
@@ -23,7 +20,7 @@ export default function HeroScrollSequence({ onEnterStudio }) {
 }
 
 /**
- * Web Implementation: Framer Motion useScroll + useTransform Scrollytelling
+ * Web Implementation: TurboTweak 3D Parallax & Framer Motion Scrollytelling
  */
 function WebHeroScrollSequence({ onEnterStudio }) {
   const containerRef = useRef(null);
@@ -33,6 +30,7 @@ function WebHeroScrollSequence({ onEnterStudio }) {
 
   const prefersReducedMotion = useReducedMotion();
   const [activeStage, setActiveStage] = useState(0);
+  const [mouseTilt, setMouseTilt] = useState({ x: 0, y: 0 });
 
   // Framer Motion Scroll Progress (0.0 -> 1.0 across 350vh)
   const { scrollYProgress } = useScroll({
@@ -184,7 +182,7 @@ function WebHeroScrollSequence({ onEnterStudio }) {
   }, [scrollYProgress]);
 
   // -------------------------------------------------------------
-  // 4. WEBGL CONCENTRIC SOUNDWAVE SHADER OVERLAY
+  // 4. WEBGL SOUNDWAVE SHADER OVERLAY
   // -------------------------------------------------------------
   useEffect(() => {
     if (prefersReducedMotion) return;
@@ -203,7 +201,6 @@ function WebHeroScrollSequence({ onEnterStudio }) {
       }
     `;
 
-    // Strictly calibrated to tokens: Cyan #22D3EE (0.133, 0.827, 0.933) & Purple #A78BFA (0.655, 0.545, 0.980)
     const fsSource = `
       precision mediump float;
       varying vec2 v_uv;
@@ -222,9 +219,9 @@ function WebHeroScrollSequence({ onEnterStudio }) {
         float waveFL = sin(distFL * 35.0 - u_time * 3.5);
         float flIntensity = smoothstep(0.8, 1.0, waveFL) * exp(-distFL * 3.0);
 
-        vec3 cyan = vec3(0.133, 0.827, 0.933);
-        vec3 purple = vec3(0.655, 0.545, 0.980);
-        vec3 color = mix(cyan, purple, sin(u_time + dist * 5.0) * 0.5 + 0.5);
+        vec3 cyan = vec3(0.133, 0.827, 0.933); // #22d3ee
+        vec3 violet = vec3(0.655, 0.545, 0.980); // #a78bfa
+        vec3 color = mix(cyan, violet, sin(u_time + dist * 5.0) * 0.5 + 0.5);
 
         float alpha = (ringIntensity * 0.45) + (flIntensity * 0.35);
         gl_FragColor = vec4(color * alpha, alpha);
@@ -273,15 +270,29 @@ function WebHeroScrollSequence({ onEnterStudio }) {
     return () => cancelAnimationFrame(animId);
   }, [prefersReducedMotion]);
 
+  const handleMouseMove = (e) => {
+    if (prefersReducedMotion) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width - 0.5) * 6;
+    const y = ((e.clientY - rect.top) / rect.height - 0.5) * 4;
+    setMouseTilt({ x, y });
+  };
+
+  const handleMouseLeave = () => {
+    setMouseTilt({ x: 0, y: 0 });
+  };
+
   return (
     <div
       ref={containerRef}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
       style={{
         position: 'relative',
         height: '350vh',
-        backgroundColor: tokens.colors.bg.base,
+        backgroundColor: '#050505',
         width: '100%',
-        borderRadius: tokens.radius.lg,
+        borderRadius: 24,
         overflow: 'visible',
       }}
     >
@@ -296,111 +307,128 @@ function WebHeroScrollSequence({ onEnterStudio }) {
           minHeight: 520,
           maxHeight: 700,
           overflow: 'hidden',
-          borderRadius: tokens.radius.lg,
-          border: `1px solid ${tokens.colors.border.hairline}`,
-          backgroundColor: tokens.colors.bg.base,
+          borderRadius: 24,
+          border: '1px solid #1e2430',
+          backgroundColor: '#050505',
+          perspective: 1200,
         }}
       >
-        {/* SHOT 1: EXTERIOR REVEAL */}
+        {/* Parallax Wrapper */}
         <motion.div
+          animate={{
+            rotateY: mouseTilt.x,
+            rotateX: -mouseTilt.y,
+          }}
+          transition={{ type: 'spring', damping: 25, stiffness: 150 }}
           style={{
             position: 'absolute',
             inset: 0,
             width: '100%',
             height: '100%',
-            opacity: opacity1,
-            scale: scale1,
-            zIndex: 1,
+            transformStyle: 'preserve-3d',
           }}
         >
-          <Image
-            source={SHOT_IMAGES[0]}
-            style={{ width: '100%', height: '100%' }}
-            resizeMode="cover"
-          />
-        </motion.div>
-
-        {/* SHOT 2: DOOR OPEN & COCKPIT INGRESS */}
-        <motion.div
-          style={{
-            position: 'absolute',
-            inset: 0,
-            width: '100%',
-            height: '100%',
-            opacity: opacity2,
-            scale: scale2,
-            zIndex: 2,
-          }}
-        >
-          <Image
-            source={SHOT_IMAGES[1]}
-            style={{ width: '100%', height: '100%' }}
-            resizeMode="cover"
-          />
-        </motion.div>
-
-        {/* SHOT 3: TOUCHSCREEN HEAD UNIT HUD */}
-        <motion.div
-          style={{
-            position: 'absolute',
-            inset: 0,
-            width: '100%',
-            height: '100%',
-            opacity: opacity3,
-            scale: scale3,
-            zIndex: 3,
-          }}
-        >
-          <Image
-            source={SHOT_IMAGES[2]}
-            style={{ width: '100%', height: '100%' }}
-            resizeMode="cover"
-          />
-        </motion.div>
-
-        {/* SHOT 4: HOLOGRAPHIC SOUNDWAVES */}
-        <motion.div
-          style={{
-            position: 'absolute',
-            inset: 0,
-            width: '100%',
-            height: '100%',
-            opacity: opacity4,
-            scale: scale4,
-            zIndex: 4,
-          }}
-        >
-          <Image
-            source={SHOT_IMAGES[3]}
-            style={{ width: '100%', height: '100%' }}
-            resizeMode="cover"
-          />
-        </motion.div>
-
-        {/* WEBGL SOUNDWAVE SHADER OVERLAY CANVAS */}
-        {!prefersReducedMotion && (
-          <motion.canvas
-            ref={webglCanvasRef}
-            width={960}
-            height={540}
+          {/* SHOT 1: EXTERIOR REVEAL */}
+          <motion.div
             style={{
               position: 'absolute',
               inset: 0,
               width: '100%',
               height: '100%',
-              pointerEvents: 'none',
-              zIndex: 5,
-              opacity: webglOpacity,
+              opacity: opacity1,
+              scale: scale1,
+              zIndex: 1,
             }}
-          />
-        )}
+          >
+            <Image
+              source={SHOT_IMAGES[0]}
+              style={{ width: '100%', height: '100%' }}
+              resizeMode="cover"
+            />
+          </motion.div>
+
+          {/* SHOT 2: DOOR OPEN & COCKPIT INGRESS */}
+          <motion.div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              width: '100%',
+              height: '100%',
+              opacity: opacity2,
+              scale: scale2,
+              zIndex: 2,
+            }}
+          >
+            <Image
+              source={SHOT_IMAGES[1]}
+              style={{ width: '100%', height: '100%' }}
+              resizeMode="cover"
+            />
+          </motion.div>
+
+          {/* SHOT 3: TOUCHSCREEN HEAD UNIT HUD */}
+          <motion.div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              width: '100%',
+              height: '100%',
+              opacity: opacity3,
+              scale: scale3,
+              zIndex: 3,
+            }}
+          >
+            <Image
+              source={SHOT_IMAGES[2]}
+              style={{ width: '100%', height: '100%' }}
+              resizeMode="cover"
+            />
+          </motion.div>
+
+          {/* SHOT 4: HOLOGRAPHIC SOUNDWAVES */}
+          <motion.div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              width: '100%',
+              height: '100%',
+              opacity: opacity4,
+              scale: scale4,
+              zIndex: 4,
+            }}
+          >
+            <Image
+              source={SHOT_IMAGES[3]}
+              style={{ width: '100%', height: '100%' }}
+              resizeMode="cover"
+            />
+          </motion.div>
+
+          {/* WEBGL SOUNDWAVE SHADER OVERLAY CANVAS */}
+          {!prefersReducedMotion && (
+            <motion.canvas
+              ref={webglCanvasRef}
+              width={960}
+              height={540}
+              style={{
+                position: 'absolute',
+                inset: 0,
+                width: '100%',
+                height: '100%',
+                pointerEvents: 'none',
+                zIndex: 5,
+                opacity: webglOpacity,
+              }}
+            />
+          )}
+        </motion.div>
 
         {/* VIGNETTE & AMBIENT SCANLINES OVERLAY */}
         <div
           style={{
             position: 'absolute',
             inset: 0,
-            background: 'radial-gradient(circle at center, transparent 35%, rgba(10, 11, 13, 0.85) 100%)',
+            background: 'radial-gradient(circle at center, transparent 35%, rgba(5, 5, 5, 0.85) 100%)',
             pointerEvents: 'none',
             zIndex: 6,
           }}
@@ -409,47 +437,13 @@ function WebHeroScrollSequence({ onEnterStudio }) {
         {/* ------------------------------------------------------------- */}
         {/* DOM-BASED HUD OVERLAYS WITH AnimatePresence                   */}
         {/* ------------------------------------------------------------- */}
-        <div
-          style={{
-            position: 'absolute',
-            inset: 0,
-            pointerEvents: 'none',
-            zIndex: 10,
-            padding: 24,
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'space-between',
-          }}
-        >
+        <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 10, padding: 24, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
           {/* Top HUD Telemetry */}
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              width: '100%',
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <div
-                style={{
-                  width: 8,
-                  height: 8,
-                  borderRadius: 4,
-                  backgroundColor: tokens.colors.signal.primary,
-                  border: `1px solid ${tokens.colors.border.hairline}`,
-                }}
-              />
-              <span
-                style={{
-                  color: tokens.colors.text.secondary,
-                  fontFamily: tokens.typography.fontFamily.mono,
-                  fontSize: 11,
-                  fontWeight: '600',
-                  letterSpacing: 1.5,
-                }}
-              >
-                CARAUDIO.AI // SCROLLYTELLING ENGINE
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, backgroundColor: '#10141d', padding: '6px 14px', borderRadius: 9999, border: '1px solid #1e2430' }}>
+              <div style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: '#22d3ee', boxShadow: '0 0 8px #22d3ee' }} />
+              <span style={{ color: '#ffffff', fontFamily: 'monospace', fontSize: 11, fontWeight: 'bold', letterSpacing: 1 }}>
+                CARAUDIO.AI // SCROLLYTELLING
               </span>
             </div>
 
@@ -460,11 +454,8 @@ function WebHeroScrollSequence({ onEnterStudio }) {
                   style={{
                     width: 24,
                     height: 3,
-                    borderRadius: 2,
-                    backgroundColor:
-                      activeStage >= step
-                        ? tokens.colors.text.primary
-                        : 'rgba(255, 255, 255, 0.12)',
+                    borderRadius: 9999,
+                    backgroundColor: activeStage >= step ? '#ffffff' : 'rgba(255,255,255,0.15)',
                     transition: 'background-color 0.3s ease',
                   }}
                 />
@@ -481,26 +472,24 @@ function WebHeroScrollSequence({ onEnterStudio }) {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -15 }}
                 transition={{ duration: 0.35, ease: 'easeOut' }}
-                style={{ pointerEvents: 'auto', maxWidth: 480, width: '100%' }}
+                style={{
+                  backgroundColor: 'rgba(10, 13, 20, 0.85)',
+                  backdropFilter: 'blur(16px)',
+                  border: '1px solid #1e2430',
+                  borderRadius: 16,
+                  padding: 18,
+                  maxWidth: 440,
+                }}
               >
-                <InstrumentPanel
-                  title="The Precision Acoustic Baseline"
-                  badge="STAGE 01 // EXTERIOR SCAN"
-                  status="info"
-                  variant="elevated"
-                  style={styles.hudPanel}
-                  headerStyle={styles.hudHeader}
-                  contentStyle={styles.hudContent}
-                >
-                  <Text style={styles.hudDescription}>
-                    Scanning chassis volume and cabin dimensions for RHD acoustic calibration.
-                  </Text>
-                  <View style={styles.readoutRow}>
-                    <Readout label="Chassis Vol" value="3.20" unit="m³" size="sm" />
-                    <Readout label="Resonance" value="200" unit="Hz" size="sm" />
-                    <Readout label="Seating Profile" value="RHD 2-ROW" size="sm" />
-                  </View>
-                </InstrumentPanel>
+                <div style={{ color: '#8b949e', fontSize: 10, fontFamily: 'monospace', fontWeight: 'bold', marginBottom: 4 }}>
+                  STAGE 01 // EXTERIOR SCAN
+                </div>
+                <h3 style={{ color: '#ffffff', fontSize: 20, fontWeight: 900, margin: '0 0 4px 0' }}>
+                  Precision Acoustic Baseline
+                </h3>
+                <p style={{ color: '#8b949e', fontSize: 12, lineHeight: 1.5, margin: 0 }}>
+                  Scanning chassis volume and cabin dimensions. Scroll down to enter the acoustic stage.
+                </p>
               </motion.div>
             )}
 
@@ -511,26 +500,24 @@ function WebHeroScrollSequence({ onEnterStudio }) {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -15 }}
                 transition={{ duration: 0.35, ease: 'easeOut' }}
-                style={{ pointerEvents: 'auto', maxWidth: 480, width: '100%' }}
+                style={{
+                  backgroundColor: 'rgba(10, 13, 20, 0.85)',
+                  backdropFilter: 'blur(16px)',
+                  border: '1px solid #22d3ee',
+                  borderRadius: 16,
+                  padding: 18,
+                  maxWidth: 440,
+                }}
               >
-                <InstrumentPanel
-                  title="Asymmetrical Seating Matrix"
-                  badge="STAGE 02 // COCKPIT INGRESS"
-                  status="warning"
-                  variant="elevated"
-                  style={styles.hudPanel}
-                  headerStyle={styles.hudHeader}
-                  contentStyle={styles.hudContent}
-                >
-                  <Text style={styles.hudDescription}>
-                    Driver sits 95cm from right speaker vs 138cm from left. 1.25ms acoustic arrival discrepancy detected.
-                  </Text>
-                  <View style={styles.readoutRow}>
-                    <Readout label="FL Distance" value="138" unit="cm" size="sm" />
-                    <Readout label="FR Distance" value="95" unit="cm" size="sm" />
-                    <Readout label="Phase Offset" value="1.25" unit="ms" size="sm" status="warning" />
-                  </View>
-                </InstrumentPanel>
+                <div style={{ color: '#22d3ee', fontSize: 10, fontFamily: 'monospace', fontWeight: 'bold', marginBottom: 4 }}>
+                  STAGE 02 // COCKPIT INGRESS
+                </div>
+                <h3 style={{ color: '#ffffff', fontSize: 20, fontWeight: 900, margin: '0 0 4px 0' }}>
+                  Asymmetrical Seating Matrix
+                </h3>
+                <p style={{ color: '#8b949e', fontSize: 12, lineHeight: 1.5, margin: 0 }}>
+                  Driver sits 95cm from right speaker vs 138cm from left. 1.25ms phase clash detected.
+                </p>
               </motion.div>
             )}
 
@@ -541,26 +528,26 @@ function WebHeroScrollSequence({ onEnterStudio }) {
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 1.05 }}
                 transition={{ type: 'spring', damping: 20, stiffness: 120 }}
-                style={{ pointerEvents: 'auto', maxWidth: 480, width: '100%' }}
+                style={{
+                  backgroundColor: 'rgba(10, 13, 20, 0.88)',
+                  backdropFilter: 'blur(16px)',
+                  border: '1px solid #1e2430',
+                  borderRadius: 16,
+                  padding: 18,
+                  maxWidth: 420,
+                }}
               >
-                <InstrumentPanel
-                  title="Acoustic Notch Compensation"
-                  badge="STAGE 03 // 14-BAND PARAMETRIC DSP"
-                  status="info"
-                  variant="elevated"
-                  style={styles.hudPanel}
-                  headerStyle={styles.hudHeader}
-                  contentStyle={styles.hudContent}
-                >
-                  <Text style={styles.hudDescription}>
-                    Target EQ curve applied to neutralize standing cabin waves and windshield reflections.
-                  </Text>
-                  <View style={styles.readoutRow}>
-                    <Readout label="Port Boost" value="+5.5" unit="dB @ 63Hz" size="sm" />
-                    <Readout label="Cabin Notch" value="-1.5" unit="dB @ 200Hz" size="sm" />
-                    <Readout label="Glass Tamer" value="-1.0" unit="dB @ 4.0kHz" size="sm" />
-                  </View>
-                </InstrumentPanel>
+                <div style={{ color: '#8b949e', fontSize: 10, fontFamily: 'monospace', fontWeight: 'bold', marginBottom: 4 }}>
+                  STAGE 03 // 14-BAND PARAMETRIC DSP
+                </div>
+                <div style={{ color: '#ffffff', fontSize: 18, fontWeight: 'bold', marginBottom: 4 }}>
+                  Target EQ Curve Applied
+                </div>
+                <div style={{ color: '#cbd5e1', fontSize: 11, lineHeight: 1.5, fontFamily: 'monospace' }}>
+                  +5.5 dB @ 63Hz (Port Resonance)<br />
+                  -1.5 dB @ 200Hz (Cabin Standing Notch)<br />
+                  -1.0 dB @ 4kHz (Windshield Glass Tamer)
+                </div>
               </motion.div>
             )}
 
@@ -571,37 +558,46 @@ function WebHeroScrollSequence({ onEnterStudio }) {
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 1.05 }}
                 transition={{ type: 'spring', damping: 18, stiffness: 100 }}
-                style={{ pointerEvents: 'auto', maxWidth: 500, width: '100%' }}
+                style={{
+                  backgroundColor: 'rgba(10, 13, 20, 0.92)',
+                  backdropFilter: 'blur(16px)',
+                  border: '1px solid #ffffff',
+                  borderRadius: 16,
+                  padding: 20,
+                  maxWidth: 460,
+                  pointerEvents: 'auto',
+                }}
               >
-                <InstrumentPanel
-                  title="Laser Soundstage Focus"
-                  badge="PHASE COHERENCE: 99.8% LOCKED"
-                  status="ok"
-                  variant="elevated"
-                  style={styles.hudPanel}
-                  headerStyle={styles.hudHeader}
-                  contentStyle={styles.hudContent}
-                >
-                  <Text style={styles.hudDescription}>
-                    All 5 speaker acoustic wavefronts arriving simultaneously at driver headrest. Ready for physical calibration.
-                  </Text>
-                  <View style={styles.readoutRow}>
-                    <Readout label="Coherence" value="99.8" unit="%" size="sm" status="ok" />
-                    <Readout label="Wavefront" value="343" unit="m/s" size="sm" status="ok" />
-                    <Readout label="Time Delta" value="0.00" unit="ms" size="sm" status="ok" />
-                  </View>
-                  {onEnterStudio && (
-                    <View style={styles.ctaWrapper}>
-                      <Button
-                        label="Open Live Tuning Studio →"
-                        variant="solid"
-                        size="md"
-                        onPress={onEnterStudio}
-                        style={styles.ctaButton}
-                      />
-                    </View>
-                  )}
-                </InstrumentPanel>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                  <div style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: '#22d3ee', boxShadow: '0 0 8px #22d3ee' }} />
+                  <span style={{ color: '#22d3ee', fontSize: 10, fontFamily: 'monospace', fontWeight: 'bold' }}>
+                    PHASE COHERENCE: 99.8% LOCKED
+                  </span>
+                </div>
+                <div style={{ color: '#ffffff', fontSize: 20, fontWeight: 900, marginBottom: 4 }}>
+                  Laser Soundstage Focus
+                </div>
+                <p style={{ color: '#cbd5e1', fontSize: 12, lineHeight: 1.4, margin: '0 0 12px 0' }}>
+                  All 5 speaker waves arriving simultaneously at driver headrest. Ready for physical calibration.
+                </p>
+
+                {onEnterStudio && (
+                  <button
+                    onClick={onEnterStudio}
+                    style={{
+                      backgroundColor: '#ffffff',
+                      color: '#050505',
+                      border: 'none',
+                      padding: '10px 20px',
+                      borderRadius: 9999,
+                      fontWeight: 'bold',
+                      fontSize: 13,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Open Live Tuning Studio →
+                  </button>
+                )}
               </motion.div>
             )}
           </AnimatePresence>
@@ -632,89 +628,23 @@ function NativeFallbackSlideshow({ onEnterStudio }) {
         resizeMode="cover"
       />
       <View style={nativeStyles.overlay}>
-        <InstrumentPanel
-          title="AI Soundfield Calibration"
-          badge="CARAUDIO.AI NATIVE PREVIEW"
-          status="ok"
-          variant="elevated"
-          style={nativeStyles.panel}
-        >
-          <Text style={nativeStyles.description}>
-            Phase-coherent 343 m/s acoustic calibration for Indian car environments.
-          </Text>
-          <View style={nativeStyles.telemetryRow}>
-            <Readout label="Wavefront" value="343" unit="m/s" size="sm" status="ok" />
-            <Readout label="Offset" value="1.25" unit="ms" size="sm" status="warning" />
-            <Readout label="Coherence" value="99.8" unit="%" size="sm" status="ok" />
-          </View>
-          {onEnterStudio && (
-            <View style={nativeStyles.ctaWrapper}>
-              <Button
-                label="Open Live Tuning Studio →"
-                variant="solid"
-                size="md"
-                onPress={onEnterStudio}
-                style={nativeStyles.ctaButton}
-              />
-            </View>
-          )}
-        </InstrumentPanel>
+        <Text style={nativeStyles.tag}>CARAUDIO.AI NATIVE PREVIEW</Text>
+        <Text style={nativeStyles.title}>AI Soundfield Calibration</Text>
+        <Text style={nativeStyles.sub}>Phase-coherent 343 m/s acoustic calibration for Indian cars.</Text>
       </View>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  hudPanel: {
-    backgroundColor: 'rgba(18, 21, 27, 0.92)',
-    borderColor: tokens.colors.border.subtle,
-    borderRadius: tokens.radius.lg,
-    borderWidth: 1,
-    overflow: 'hidden',
-  },
-  hudHeader: {
-    backgroundColor: 'transparent',
-    borderBottomColor: tokens.colors.border.hairline,
-    paddingHorizontal: tokens.spacing.md,
-    paddingVertical: tokens.spacing.sm,
-  },
-  hudContent: {
-    padding: tokens.spacing.md,
-    gap: tokens.spacing.sm,
-  },
-  hudDescription: {
-    fontFamily: tokens.typography.fontFamily.sans,
-    fontSize: tokens.typography.sizes.xs,
-    lineHeight: 16,
-    color: tokens.colors.text.secondary,
-  },
-  readoutRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: tokens.spacing.xs,
-    marginTop: tokens.spacing.xs,
-  },
-  ctaWrapper: {
-    marginTop: tokens.spacing.xs,
-    alignItems: 'flex-start',
-  },
-  ctaButton: {
-    alignSelf: 'flex-start',
-  },
-});
-
 const nativeStyles = StyleSheet.create({
   container: {
     width: '100%',
-    height: 400,
-    backgroundColor: tokens.colors.bg.base,
+    height: 360,
+    backgroundColor: '#050505',
     position: 'relative',
-    borderRadius: tokens.radius.lg,
-    borderWidth: 1,
-    borderColor: tokens.colors.border.hairline,
+    borderRadius: 24,
     overflow: 'hidden',
-    marginBottom: tokens.spacing.xl,
+    marginBottom: 20,
   },
   image: {
     width: '100%',
@@ -725,31 +655,23 @@ const nativeStyles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    padding: tokens.spacing.md,
+    padding: 16,
+    backgroundColor: 'rgba(5, 5, 5, 0.85)',
   },
-  panel: {
-    backgroundColor: 'rgba(18, 21, 27, 0.92)',
-    borderColor: tokens.colors.border.subtle,
-    borderRadius: tokens.radius.md,
+  tag: {
+    color: '#22d3ee',
+    fontSize: 10,
+    fontWeight: 'bold',
+    fontFamily: 'monospace',
   },
-  description: {
-    fontFamily: tokens.typography.fontFamily.sans,
-    fontSize: tokens.typography.sizes.xs,
-    color: tokens.colors.text.secondary,
-    lineHeight: 16,
-    marginBottom: tokens.spacing.xs,
+  title: {
+    color: '#ffffff',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginVertical: 4,
   },
-  telemetryRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: tokens.spacing.xs,
-    marginBottom: tokens.spacing.sm,
-  },
-  ctaWrapper: {
-    alignItems: 'flex-start',
-  },
-  ctaButton: {
-    width: '100%',
+  sub: {
+    color: '#8b949e',
+    fontSize: 12,
   },
 });

@@ -1,6 +1,10 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { Platform, StyleSheet, View, Text, Image } from 'react-native';
 import { motion, useScroll, useTransform, AnimatePresence, useReducedMotion } from 'framer-motion';
+import { tokens } from '../design-system/tokens';
+import { InstrumentPanel } from './ui/InstrumentPanel';
+import { Button } from './ui/Button';
+import { Readout } from './ui/Readout';
 
 // 8K Photorealistic Storyboard Shots
 const SHOT_IMAGES = [
@@ -30,7 +34,7 @@ function WebHeroScrollSequence({ onEnterStudio }) {
   const prefersReducedMotion = useReducedMotion();
   const [activeStage, setActiveStage] = useState(0);
 
-  // Framer Motion Scroll Progress (0.0 -> 1.0 across 400vh)
+  // Framer Motion Scroll Progress (0.0 -> 1.0 across 350vh)
   const { scrollYProgress } = useScroll({
     target: containerRef,
     offset: ['start start', 'end end'],
@@ -60,7 +64,7 @@ function WebHeroScrollSequence({ onEnterStudio }) {
   // -------------------------------------------------------------
   const initAudioOnGesture = () => {
     if (!audioCtxRef.current) {
-      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      const AudioContextClass = typeof window !== 'undefined' ? (window.AudioContext || window.webkitAudioContext) : null;
       if (AudioContextClass) {
         audioCtxRef.current = new AudioContextClass();
       }
@@ -199,6 +203,7 @@ function WebHeroScrollSequence({ onEnterStudio }) {
       }
     `;
 
+    // Strictly calibrated to tokens: Cyan #22D3EE (0.133, 0.827, 0.933) & Purple #A78BFA (0.655, 0.545, 0.980)
     const fsSource = `
       precision mediump float;
       varying vec2 v_uv;
@@ -217,9 +222,9 @@ function WebHeroScrollSequence({ onEnterStudio }) {
         float waveFL = sin(distFL * 35.0 - u_time * 3.5);
         float flIntensity = smoothstep(0.8, 1.0, waveFL) * exp(-distFL * 3.0);
 
-        vec3 cyan = vec3(0.024, 0.714, 0.831);
-        vec3 violet = vec3(0.545, 0.361, 0.965);
-        vec3 color = mix(cyan, violet, sin(u_time + dist * 5.0) * 0.5 + 0.5);
+        vec3 cyan = vec3(0.133, 0.827, 0.933);
+        vec3 purple = vec3(0.655, 0.545, 0.980);
+        vec3 color = mix(cyan, purple, sin(u_time + dist * 5.0) * 0.5 + 0.5);
 
         float alpha = (ringIntensity * 0.45) + (flIntensity * 0.35);
         gl_FragColor = vec4(color * alpha, alpha);
@@ -274,9 +279,9 @@ function WebHeroScrollSequence({ onEnterStudio }) {
       style={{
         position: 'relative',
         height: '350vh',
-        backgroundColor: '#020617',
+        backgroundColor: tokens.colors.bg.base,
         width: '100%',
-        borderRadius: 16,
+        borderRadius: tokens.radius.lg,
         overflow: 'visible',
       }}
     >
@@ -291,9 +296,9 @@ function WebHeroScrollSequence({ onEnterStudio }) {
           minHeight: 520,
           maxHeight: 700,
           overflow: 'hidden',
-          borderRadius: 16,
-          border: '1px solid rgba(6, 182, 212, 0.3)',
-          backgroundColor: '#020617',
+          borderRadius: tokens.radius.lg,
+          border: `1px solid ${tokens.colors.border.hairline}`,
+          backgroundColor: tokens.colors.bg.base,
         }}
       >
         {/* SHOT 1: EXTERIOR REVEAL */}
@@ -395,7 +400,7 @@ function WebHeroScrollSequence({ onEnterStudio }) {
           style={{
             position: 'absolute',
             inset: 0,
-            background: 'radial-gradient(circle at center, transparent 35%, rgba(2, 6, 23, 0.8) 100%)',
+            background: 'radial-gradient(circle at center, transparent 35%, rgba(10, 11, 13, 0.85) 100%)',
             pointerEvents: 'none',
             zIndex: 6,
           }}
@@ -404,12 +409,46 @@ function WebHeroScrollSequence({ onEnterStudio }) {
         {/* ------------------------------------------------------------- */}
         {/* DOM-BASED HUD OVERLAYS WITH AnimatePresence                   */}
         {/* ------------------------------------------------------------- */}
-        <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 10, padding: 24, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            pointerEvents: 'none',
+            zIndex: 10,
+            padding: 24,
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+          }}
+        >
           {/* Top HUD Telemetry */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              width: '100%',
+            }}
+          >
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <div style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#06b6d4', boxShadow: '0 0 10px #06b6d4' }} />
-              <span style={{ color: '#06b6d4', fontFamily: 'monospace', fontSize: 11, fontWeight: 'bold', letterSpacing: 1.5 }}>
+              <div
+                style={{
+                  width: 8,
+                  height: 8,
+                  borderRadius: 4,
+                  backgroundColor: tokens.colors.signal.primary,
+                  border: `1px solid ${tokens.colors.border.hairline}`,
+                }}
+              />
+              <span
+                style={{
+                  color: tokens.colors.text.secondary,
+                  fontFamily: tokens.typography.fontFamily.mono,
+                  fontSize: 11,
+                  fontWeight: '600',
+                  letterSpacing: 1.5,
+                }}
+              >
                 CARAUDIO.AI // SCROLLYTELLING ENGINE
               </span>
             </div>
@@ -422,7 +461,10 @@ function WebHeroScrollSequence({ onEnterStudio }) {
                     width: 24,
                     height: 3,
                     borderRadius: 2,
-                    backgroundColor: activeStage >= step ? '#06b6d4' : 'rgba(255,255,255,0.2)',
+                    backgroundColor:
+                      activeStage >= step
+                        ? tokens.colors.text.primary
+                        : 'rgba(255, 255, 255, 0.12)',
                     transition: 'background-color 0.3s ease',
                   }}
                 />
@@ -439,24 +481,26 @@ function WebHeroScrollSequence({ onEnterStudio }) {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -15 }}
                 transition={{ duration: 0.35, ease: 'easeOut' }}
-                style={{
-                  backgroundColor: 'rgba(7, 11, 20, 0.85)',
-                  backdropFilter: 'blur(16px)',
-                  border: '1px solid rgba(6, 182, 212, 0.3)',
-                  borderRadius: 12,
-                  padding: 16,
-                  maxWidth: 440,
-                }}
+                style={{ pointerEvents: 'auto', maxWidth: 480, width: '100%' }}
               >
-                <div style={{ color: '#38bdf8', fontSize: 10, fontFamily: 'monospace', fontWeight: 'bold', marginBottom: 2 }}>
-                  STAGE 01 // EXTERIOR SCAN
-                </div>
-                <h3 style={{ color: '#ffffff', fontSize: 20, fontWeight: 900, margin: '0 0 4px 0' }}>
-                  The Precision Acoustic Baseline
-                </h3>
-                <p style={{ color: '#94a3b8', fontSize: 12, lineHeight: 1.4, margin: 0 }}>
-                  Scanning chassis volume and cabin dimensions. Scroll down to enter the acoustic stage.
-                </p>
+                <InstrumentPanel
+                  title="The Precision Acoustic Baseline"
+                  badge="STAGE 01 // EXTERIOR SCAN"
+                  status="info"
+                  variant="elevated"
+                  style={styles.hudPanel}
+                  headerStyle={styles.hudHeader}
+                  contentStyle={styles.hudContent}
+                >
+                  <Text style={styles.hudDescription}>
+                    Scanning chassis volume and cabin dimensions for RHD acoustic calibration.
+                  </Text>
+                  <View style={styles.readoutRow}>
+                    <Readout label="Chassis Vol" value="3.20" unit="m³" size="sm" />
+                    <Readout label="Resonance" value="200" unit="Hz" size="sm" />
+                    <Readout label="Seating Profile" value="RHD 2-ROW" size="sm" />
+                  </View>
+                </InstrumentPanel>
               </motion.div>
             )}
 
@@ -467,24 +511,26 @@ function WebHeroScrollSequence({ onEnterStudio }) {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -15 }}
                 transition={{ duration: 0.35, ease: 'easeOut' }}
-                style={{
-                  backgroundColor: 'rgba(7, 11, 20, 0.85)',
-                  backdropFilter: 'blur(16px)',
-                  border: '1px solid rgba(168, 85, 247, 0.4)',
-                  borderRadius: 12,
-                  padding: 16,
-                  maxWidth: 440,
-                }}
+                style={{ pointerEvents: 'auto', maxWidth: 480, width: '100%' }}
               >
-                <div style={{ color: '#a855f7', fontSize: 10, fontFamily: 'monospace', fontWeight: 'bold', marginBottom: 2 }}>
-                  STAGE 02 // COCKPIT INGRESS
-                </div>
-                <h3 style={{ color: '#ffffff', fontSize: 20, fontWeight: 900, margin: '0 0 4px 0' }}>
-                  Asymmetrical Seating Matrix
-                </h3>
-                <p style={{ color: '#94a3b8', fontSize: 12, lineHeight: 1.4, margin: 0 }}>
-                  Driver sits 95cm from right speaker vs 138cm from left. 1.25ms phase clash detected.
-                </p>
+                <InstrumentPanel
+                  title="Asymmetrical Seating Matrix"
+                  badge="STAGE 02 // COCKPIT INGRESS"
+                  status="warning"
+                  variant="elevated"
+                  style={styles.hudPanel}
+                  headerStyle={styles.hudHeader}
+                  contentStyle={styles.hudContent}
+                >
+                  <Text style={styles.hudDescription}>
+                    Driver sits 95cm from right speaker vs 138cm from left. 1.25ms acoustic arrival discrepancy detected.
+                  </Text>
+                  <View style={styles.readoutRow}>
+                    <Readout label="FL Distance" value="138" unit="cm" size="sm" />
+                    <Readout label="FR Distance" value="95" unit="cm" size="sm" />
+                    <Readout label="Phase Offset" value="1.25" unit="ms" size="sm" status="warning" />
+                  </View>
+                </InstrumentPanel>
               </motion.div>
             )}
 
@@ -495,26 +541,26 @@ function WebHeroScrollSequence({ onEnterStudio }) {
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 1.05 }}
                 transition={{ type: 'spring', damping: 20, stiffness: 120 }}
-                style={{
-                  backgroundColor: 'rgba(7, 11, 20, 0.88)',
-                  backdropFilter: 'blur(16px)',
-                  border: '1px solid rgba(6, 182, 212, 0.4)',
-                  borderRadius: 12,
-                  padding: 18,
-                  maxWidth: 420,
-                }}
+                style={{ pointerEvents: 'auto', maxWidth: 480, width: '100%' }}
               >
-                <div style={{ color: '#06b6d4', fontSize: 10, fontFamily: 'monospace', fontWeight: 'bold', marginBottom: 4 }}>
-                  STAGE 03 // 14-BAND PARAMETRIC DSP
-                </div>
-                <div style={{ color: '#ffffff', fontSize: 18, fontWeight: 'bold', marginBottom: 4 }}>
-                  Target EQ Curve Applied
-                </div>
-                <div style={{ color: '#cbd5e1', fontSize: 11, lineHeight: 1.5, fontFamily: 'monospace' }}>
-                  +5.5dB @ 63Hz (Port Resonance)<br />
-                  -1.5dB @ 200Hz (Cabin Standing Notch)<br />
-                  -1.0dB @ 4kHz (Windshield Glass Tamer)
-                </div>
+                <InstrumentPanel
+                  title="Acoustic Notch Compensation"
+                  badge="STAGE 03 // 14-BAND PARAMETRIC DSP"
+                  status="info"
+                  variant="elevated"
+                  style={styles.hudPanel}
+                  headerStyle={styles.hudHeader}
+                  contentStyle={styles.hudContent}
+                >
+                  <Text style={styles.hudDescription}>
+                    Target EQ curve applied to neutralize standing cabin waves and windshield reflections.
+                  </Text>
+                  <View style={styles.readoutRow}>
+                    <Readout label="Port Boost" value="+5.5" unit="dB @ 63Hz" size="sm" />
+                    <Readout label="Cabin Notch" value="-1.5" unit="dB @ 200Hz" size="sm" />
+                    <Readout label="Glass Tamer" value="-1.0" unit="dB @ 4.0kHz" size="sm" />
+                  </View>
+                </InstrumentPanel>
               </motion.div>
             )}
 
@@ -525,47 +571,37 @@ function WebHeroScrollSequence({ onEnterStudio }) {
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 1.05 }}
                 transition={{ type: 'spring', damping: 18, stiffness: 100 }}
-                style={{
-                  backgroundColor: 'rgba(6, 78, 59, 0.90)',
-                  backdropFilter: 'blur(16px)',
-                  border: '1px solid rgba(16, 185, 129, 0.6)',
-                  borderRadius: 12,
-                  padding: 20,
-                  maxWidth: 460,
-                  pointerEvents: 'auto',
-                }}
+                style={{ pointerEvents: 'auto', maxWidth: 500, width: '100%' }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-                  <div style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#10b981', boxShadow: '0 0 10px #10b981' }} />
-                  <span style={{ color: '#34d399', fontSize: 10, fontFamily: 'monospace', fontWeight: 'bold' }}>
-                    PHASE COHERENCE: 99.8% LOCKED
-                  </span>
-                </div>
-                <div style={{ color: '#ffffff', fontSize: 20, fontWeight: 900, marginBottom: 4 }}>
-                  Laser Soundstage Focus
-                </div>
-                <p style={{ color: '#d1fae5', fontSize: 12, lineHeight: 1.4, margin: '0 0 12px 0' }}>
-                  All 5 speaker waves arriving simultaneously at driver headrest. Ready for physical calibration.
-                </p>
-
-                {onEnterStudio && (
-                  <button
-                    onClick={onEnterStudio}
-                    style={{
-                      backgroundColor: '#06b6d4',
-                      color: '#020617',
-                      border: 'none',
-                      padding: '10px 18px',
-                      borderRadius: 6,
-                      fontWeight: 'bold',
-                      fontSize: 13,
-                      cursor: 'pointer',
-                      boxShadow: '0 0 20px rgba(6, 182, 212, 0.5)',
-                    }}
-                  >
-                    Open Live Tuning Studio →
-                  </button>
-                )}
+                <InstrumentPanel
+                  title="Laser Soundstage Focus"
+                  badge="PHASE COHERENCE: 99.8% LOCKED"
+                  status="ok"
+                  variant="elevated"
+                  style={styles.hudPanel}
+                  headerStyle={styles.hudHeader}
+                  contentStyle={styles.hudContent}
+                >
+                  <Text style={styles.hudDescription}>
+                    All 5 speaker acoustic wavefronts arriving simultaneously at driver headrest. Ready for physical calibration.
+                  </Text>
+                  <View style={styles.readoutRow}>
+                    <Readout label="Coherence" value="99.8" unit="%" size="sm" status="ok" />
+                    <Readout label="Wavefront" value="343" unit="m/s" size="sm" status="ok" />
+                    <Readout label="Time Delta" value="0.00" unit="ms" size="sm" status="ok" />
+                  </View>
+                  {onEnterStudio && (
+                    <View style={styles.ctaWrapper}>
+                      <Button
+                        label="Open Live Tuning Studio →"
+                        variant="solid"
+                        size="md"
+                        onPress={onEnterStudio}
+                        style={styles.ctaButton}
+                      />
+                    </View>
+                  )}
+                </InstrumentPanel>
               </motion.div>
             )}
           </AnimatePresence>
@@ -596,23 +632,89 @@ function NativeFallbackSlideshow({ onEnterStudio }) {
         resizeMode="cover"
       />
       <View style={nativeStyles.overlay}>
-        <Text style={nativeStyles.tag}>CARAUDIO.AI NATIVE PREVIEW</Text>
-        <Text style={nativeStyles.title}>AI Soundfield Calibration</Text>
-        <Text style={nativeStyles.sub}>Phase-coherent 343 m/s acoustic calibration for Indian cars.</Text>
+        <InstrumentPanel
+          title="AI Soundfield Calibration"
+          badge="CARAUDIO.AI NATIVE PREVIEW"
+          status="ok"
+          variant="elevated"
+          style={nativeStyles.panel}
+        >
+          <Text style={nativeStyles.description}>
+            Phase-coherent 343 m/s acoustic calibration for Indian car environments.
+          </Text>
+          <View style={nativeStyles.telemetryRow}>
+            <Readout label="Wavefront" value="343" unit="m/s" size="sm" status="ok" />
+            <Readout label="Offset" value="1.25" unit="ms" size="sm" status="warning" />
+            <Readout label="Coherence" value="99.8" unit="%" size="sm" status="ok" />
+          </View>
+          {onEnterStudio && (
+            <View style={nativeStyles.ctaWrapper}>
+              <Button
+                label="Open Live Tuning Studio →"
+                variant="solid"
+                size="md"
+                onPress={onEnterStudio}
+                style={nativeStyles.ctaButton}
+              />
+            </View>
+          )}
+        </InstrumentPanel>
       </View>
     </View>
   );
 }
 
+const styles = StyleSheet.create({
+  hudPanel: {
+    backgroundColor: 'rgba(18, 21, 27, 0.92)',
+    borderColor: tokens.colors.border.subtle,
+    borderRadius: tokens.radius.lg,
+    borderWidth: 1,
+    overflow: 'hidden',
+  },
+  hudHeader: {
+    backgroundColor: 'transparent',
+    borderBottomColor: tokens.colors.border.hairline,
+    paddingHorizontal: tokens.spacing.md,
+    paddingVertical: tokens.spacing.sm,
+  },
+  hudContent: {
+    padding: tokens.spacing.md,
+    gap: tokens.spacing.sm,
+  },
+  hudDescription: {
+    fontFamily: tokens.typography.fontFamily.sans,
+    fontSize: tokens.typography.sizes.xs,
+    lineHeight: 16,
+    color: tokens.colors.text.secondary,
+  },
+  readoutRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: tokens.spacing.xs,
+    marginTop: tokens.spacing.xs,
+  },
+  ctaWrapper: {
+    marginTop: tokens.spacing.xs,
+    alignItems: 'flex-start',
+  },
+  ctaButton: {
+    alignSelf: 'flex-start',
+  },
+});
+
 const nativeStyles = StyleSheet.create({
   container: {
     width: '100%',
-    height: 360,
-    backgroundColor: '#020617',
+    height: 400,
+    backgroundColor: tokens.colors.bg.base,
     position: 'relative',
-    borderRadius: 12,
+    borderRadius: tokens.radius.lg,
+    borderWidth: 1,
+    borderColor: tokens.colors.border.hairline,
     overflow: 'hidden',
-    marginBottom: 20,
+    marginBottom: tokens.spacing.xl,
   },
   image: {
     width: '100%',
@@ -623,23 +725,31 @@ const nativeStyles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    padding: 16,
-    backgroundColor: 'rgba(2, 6, 23, 0.85)',
+    padding: tokens.spacing.md,
   },
-  tag: {
-    color: '#06b6d4',
-    fontSize: 10,
-    fontWeight: 'bold',
-    fontFamily: 'monospace',
+  panel: {
+    backgroundColor: 'rgba(18, 21, 27, 0.92)',
+    borderColor: tokens.colors.border.subtle,
+    borderRadius: tokens.radius.md,
   },
-  title: {
-    color: '#ffffff',
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginVertical: 4,
+  description: {
+    fontFamily: tokens.typography.fontFamily.sans,
+    fontSize: tokens.typography.sizes.xs,
+    color: tokens.colors.text.secondary,
+    lineHeight: 16,
+    marginBottom: tokens.spacing.xs,
   },
-  sub: {
-    color: '#94a3b8',
-    fontSize: 12,
+  telemetryRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: tokens.spacing.xs,
+    marginBottom: tokens.spacing.sm,
+  },
+  ctaWrapper: {
+    alignItems: 'flex-start',
+  },
+  ctaButton: {
+    width: '100%',
   },
 });

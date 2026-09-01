@@ -9,7 +9,7 @@ import {
   SafeAreaView,
   StatusBar,
   Linking,
-  Dimensions
+  Image
 } from 'react-native';
 
 // --- DATASETS FOR MULTI-CAR & MULTI-EQUIPMENT ENGINE ---
@@ -147,9 +147,49 @@ const SPEED_OF_SOUND = 34.3; // cm / ms
 
 const EQ_FREQUENCIES = [32, 63, 100, 200, 400, 630, 1000, 2000, 4000, 8000, 10000, 12000, 14000, 16000];
 
+// CINEMATIC STORYBOARD SHOTS
+const STORYBOARD_SHOTS = [
+  {
+    id: 0,
+    tag: 'SHOT 01 // EXTERIOR REVEAL',
+    title: 'The Dark Garage Reveal',
+    desc: 'Volumetric studio lights sweep over the sculpted body lines of the Skoda Kylaq.',
+    image: require('@/assets/images/shot1_exterior.jpg'),
+    hudState: 'ACOUSTIC SCAN: INITIALIZING'
+  },
+  {
+    id: 1,
+    tag: 'SHOT 02 // COCKPIT INGRESS',
+    title: 'Door Opens & Ingress',
+    desc: 'The door glides open revealing ambient cyan & purple LED cockpit illumination.',
+    image: require('@/assets/images/shot2_door_open.jpg'),
+    hudState: 'CABIN GEOMETRY: 2566mm DETECTED'
+  },
+  {
+    id: 2,
+    tag: 'SHOT 03 // TOUCHSCREEN HUD',
+    title: '14-Band Parametric EQ Screen',
+    desc: 'Close-up zoom on the Nakamichi head unit displaying active DSP parametric filters.',
+    image: require('@/assets/images/shot3_touchscreen.jpg'),
+    hudState: 'DSP TARGET: SQL 63Hz BOOST'
+  },
+  {
+    id: 3,
+    tag: 'SHOT 04 // HOLOGRAPHIC SOUNDWAVES',
+    title: 'Acoustic Soundstage Lock',
+    desc: 'Holographic soundwave rings pulse through cabin air, snapping directly to the driver seat.',
+    image: require('@/assets/images/shot4_soundwaves.jpg'),
+    hudState: 'PHASE COHERENCE: 99.8% LOCKED'
+  }
+];
+
 export default function AppMainScreen() {
   // Navigation
   const [currentView, setCurrentView] = useState<'landing' | 'studio'>('landing');
+
+  // Cinematic Video Player State
+  const [activeShotIdx, setActiveShotIdx] = useState<number>(0);
+  const [isVideoPlaying, setIsVideoPlaying] = useState<boolean>(true);
 
   // Multi-Car & Hardware Setup State
   const [selectedCarIdx, setSelectedCarIdx] = useState<number>(0);
@@ -168,8 +208,16 @@ export default function AppMainScreen() {
   const oscRef = useRef<any>(null);
   const soundfieldCanvasRef = useRef<any>(null);
   const eqCanvasRef = useRef<any>(null);
-  const oscilloscopeCanvasRef = useRef<any>(null);
   const animationFrameRef = useRef<number | null>(null);
+
+  // Auto-advance cinematic video shots
+  useEffect(() => {
+    if (!isVideoPlaying) return;
+    const interval = setInterval(() => {
+      setActiveShotIdx((prev) => (prev + 1) % STORYBOARD_SHOTS.length);
+    }, 3200);
+    return () => clearInterval(interval);
+  }, [isVideoPlaying]);
 
   const car = CAR_CATALOG[selectedCarIdx];
   const headUnit = HEAD_UNITS[selectedHeadUnitIdx];
@@ -228,7 +276,6 @@ export default function AppMainScreen() {
       const width = canvas.width || 360;
       const height = canvas.height || 420;
 
-      // Dark futuristic cabin background
       ctx.fillStyle = '#070d18';
       ctx.fillRect(0, 0, width, height);
 
@@ -236,19 +283,13 @@ export default function AppMainScreen() {
       ctx.strokeStyle = 'rgba(56, 189, 248, 0.25)';
       ctx.lineWidth = 2;
       ctx.beginPath();
-      // Hood
       ctx.moveTo(width * 0.35, height * 0.12);
       ctx.lineTo(width * 0.65, height * 0.12);
-      // Windshield A-pillar
       ctx.lineTo(width * 0.80, height * 0.26);
-      // Right Doors
       ctx.lineTo(width * 0.84, height * 0.78);
-      // Rear Hatch
       ctx.lineTo(width * 0.65, height * 0.94);
       ctx.lineTo(width * 0.35, height * 0.94);
-      // Left Doors
       ctx.lineTo(width * 0.16, height * 0.78);
-      // Left A-pillar
       ctx.lineTo(width * 0.20, height * 0.26);
       ctx.closePath();
       ctx.stroke();
@@ -256,11 +297,8 @@ export default function AppMainScreen() {
       // Seats & Center Console
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
       ctx.lineWidth = 1;
-      // Driver Seat (Right Side in India RHD)
       ctx.strokeRect(width * 0.54, height * 0.34, width * 0.22, height * 0.16);
-      // Passenger Seat
       ctx.strokeRect(width * 0.24, height * 0.34, width * 0.22, height * 0.16);
-      // Rear Bench
       ctx.strokeRect(width * 0.24, height * 0.62, width * 0.52, height * 0.14);
 
       // Driver's Head Target (Glowing Pulse)
@@ -277,10 +315,9 @@ export default function AppMainScreen() {
       ctx.strokeStyle = 'rgba(6, 182, 212, 0.6)';
       ctx.stroke();
 
-      // Text label for Driver
       ctx.fillStyle = '#ffffff';
       ctx.font = 'bold 10px sans-serif';
-      ctx.fillText('DRIVER EAR', driverX - 28, driverY - 14);
+      ctx.fillText('DRIVER SWEET SPOT', driverX - 44, driverY - 14);
 
       // Sound Wave Propagation from Each Speaker
       const speakerList = [
@@ -295,17 +332,14 @@ export default function AppMainScreen() {
         const spkX = width * spk.x;
         const spkY = height * spk.y;
 
-        // Draw Speaker Dot
         ctx.beginPath();
         ctx.arc(spkX, spkY, spk.name === 'SUB' ? 7 : 5, 0, Math.PI * 2);
         ctx.fillStyle = spk.color;
         ctx.fill();
 
-        // Wave phase delay: if time alignment is enabled, offset wave by calculated delay
         const delayOffset = timeAlignmentEnabled ? (spk.delay * 8.0) : 0;
         const wavePhase = (time * 1.5 - delayOffset) % 120;
 
-        // Expanding concentric soundwave arcs
         for (let r = wavePhase; r < 180; r += 35) {
           if (r > 5) {
             const alpha = Math.max(0, 1 - r / 180);
@@ -317,7 +351,6 @@ export default function AppMainScreen() {
           }
         }
 
-        // Distance & Delay Tag
         ctx.fillStyle = 'rgba(148, 163, 184, 0.8)';
         ctx.font = '9px monospace';
         const delayText = timeAlignmentEnabled ? `${spk.delay}ms` : '0ms';
@@ -350,7 +383,6 @@ export default function AppMainScreen() {
     ctx.fillStyle = '#060a12';
     ctx.fillRect(0, 0, width, height);
 
-    // Grid Lines (+12dB, +6dB, 0dB, -6dB, -12dB)
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.06)';
     ctx.lineWidth = 1;
     for (let y = 20; y < height; y += 35) {
@@ -360,7 +392,6 @@ export default function AppMainScreen() {
       ctx.stroke();
     }
 
-    // 0dB Center Reference Line
     const zeroY = height / 2;
     ctx.strokeStyle = 'rgba(56, 189, 248, 0.25)';
     ctx.beginPath();
@@ -368,15 +399,12 @@ export default function AppMainScreen() {
     ctx.lineTo(width, zeroY);
     ctx.stroke();
 
-    // Calculate Points
     const stepX = width / (eqGains.length - 1);
     const points = eqGains.map((gain, i) => {
-      // 12dB max maps to top/bottom
       const y = zeroY - (gain / 12) * (height * 0.4);
       return { x: i * stepX, y };
     });
 
-    // Draw Smooth Bezier Spline
     ctx.beginPath();
     ctx.moveTo(points[0].x, points[0].y);
     for (let i = 0; i < points.length - 1; i++) {
@@ -385,15 +413,13 @@ export default function AppMainScreen() {
     }
     ctx.lineTo(points[points.length - 1].x, points[points.length - 1].y);
 
-    // Stroke Curve
     ctx.strokeStyle = '#06b6d4';
     ctx.lineWidth = 3;
     ctx.shadowColor = '#06b6d4';
     ctx.shadowBlur = 12;
     ctx.stroke();
-    ctx.shadowBlur = 0; // reset
+    ctx.shadowBlur = 0;
 
-    // Fill underneath the curve with glowing gradient
     ctx.lineTo(width, height);
     ctx.lineTo(0, height);
     ctx.closePath();
@@ -403,7 +429,6 @@ export default function AppMainScreen() {
     ctx.fillStyle = grad;
     ctx.fill();
 
-    // Draw Interactive Frequency Handles
     points.forEach((pt, idx) => {
       ctx.beginPath();
       ctx.arc(pt.x, pt.y, 4, 0, Math.PI * 2);
@@ -495,6 +520,8 @@ export default function AppMainScreen() {
     });
   };
 
+  const currentShot = STORYBOARD_SHOTS[activeShotIdx];
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="light-content" backgroundColor="#020617" />
@@ -517,7 +544,7 @@ export default function AppMainScreen() {
             onPress={() => setCurrentView('landing')}
           >
             <Text style={[styles.navPillText, currentView === 'landing' && styles.navPillTextActive]}>
-              ✨ Experience
+              🎬 Experience
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -534,7 +561,7 @@ export default function AppMainScreen() {
       <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
 
         {/* ========================================================================= */}
-        {/* VIEW 1: LUXURY CINEMATIC EXPERIENCE LANDING                               */}
+        {/* VIEW 1: CINEMATIC STORYBOARD & LUXURY LANDING                             */}
         {/* ========================================================================= */}
         {currentView === 'landing' && (
           <View style={styles.viewContent}>
@@ -558,6 +585,68 @@ export default function AppMainScreen() {
                 Experience deep kick punch, zero windshield fatigue, and pinpoint vocal staging.
               </Text>
 
+              {/* ------------------------------------------------------------- */}
+              {/* THE CINEMATIC 4-SHOT VEO VIDEO / ANIMATION SHOWCASE           */}
+              {/* ------------------------------------------------------------- */}
+              <View style={styles.cinematicPlayerCard}>
+                {/* Player Top Bar */}
+                <View style={styles.playerTopBar}>
+                  <View style={styles.playerDotGroup}>
+                    <View style={styles.dotRed} />
+                    <View style={styles.dotYellow} />
+                    <View style={styles.dotGreen} />
+                  </View>
+                  <Text style={styles.playerHUDTag}>{currentShot.hudState}</Text>
+                  <TouchableOpacity
+                    style={styles.pausePlayBtn}
+                    onPress={() => setIsVideoPlaying(!isVideoPlaying)}
+                  >
+                    <Text style={styles.pausePlayText}>{isVideoPlaying ? '⏸️ AUTO-PLAY ON' : '▶️ PAUSED'}</Text>
+                  </TouchableOpacity>
+                </View>
+
+                {/* Main 16:9 Cinematic Video Display */}
+                <View style={styles.screenFrame}>
+                  <Image
+                    source={currentShot.image}
+                    style={styles.cinematicImage}
+                    resizeMode="cover"
+                  />
+
+                  {/* Glassmorphic Caption Overlay */}
+                  <View style={styles.captionOverlay}>
+                    <View style={styles.captionHeaderRow}>
+                      <Text style={styles.captionTag}>{currentShot.tag}</Text>
+                      <Text style={styles.captionIndex}>{activeShotIdx + 1} / 4</Text>
+                    </View>
+                    <Text style={styles.captionTitle}>{currentShot.title}</Text>
+                    <Text style={styles.captionDesc}>{currentShot.desc}</Text>
+                  </View>
+                </View>
+
+                {/* Interactive Shot Scrubbing Bar */}
+                <View style={styles.shotScrubberRow}>
+                  {STORYBOARD_SHOTS.map((shot, idx) => (
+                    <TouchableOpacity
+                      key={shot.id}
+                      style={[styles.scrubberTab, activeShotIdx === idx && styles.scrubberTabActive]}
+                      onPress={() => {
+                        setActiveShotIdx(idx);
+                        setIsVideoPlaying(false);
+                      }}
+                    >
+                      <View style={[styles.scrubberDot, activeShotIdx === idx && styles.scrubberDotActive]} />
+                      <Text style={[styles.scrubberTitle, activeShotIdx === idx && styles.textCyan]}>
+                        0{idx + 1} // {shot.title.split(' ')[0]}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+
+                <View style={styles.playerBottomGlow} />
+              </View>
+
+              {/* HERO CTA BUTTONS */}
               <View style={styles.heroBtnRow}>
                 <TouchableOpacity style={styles.primaryGlowBtn} onPress={() => setCurrentView('studio')}>
                   <Text style={styles.primaryGlowBtnText}>Launch Live Acoustic Studio →</Text>
@@ -570,37 +659,7 @@ export default function AppMainScreen() {
                 </TouchableOpacity>
               </View>
 
-              {/* VEO VIDEO / SIMULATION SHOWCASE CONTAINER */}
-              <View style={styles.videoShowcaseContainer}>
-                <View style={styles.videoShowcaseHeader}>
-                  <View style={styles.videoDotRed} />
-                  <View style={styles.videoDotYellow} />
-                  <View style={styles.videoDotGreen} />
-                  <Text style={styles.videoHeaderTitle}>AI SOUNDFIELD SIMULATION • 343 M/S ACOUSTIC MAPPING</Text>
-                </View>
-
-                {/* Video/Canvas Simulation Preview */}
-                <View style={styles.simulationPreview}>
-                  <View style={styles.hudMetricTopLeft}>
-                    <Text style={styles.hudLabel}>PHASE COHERENCE</Text>
-                    <Text style={styles.hudValue}>99.8% TARGET</Text>
-                  </View>
-                  <View style={styles.hudMetricTopRight}>
-                    <Text style={styles.hudLabel}>DELAY CALIBRATION</Text>
-                    <Text style={styles.hudValueCyan}>0.00 ms OFFSET</Text>
-                  </View>
-
-                  <View style={styles.centerSimulationPulse}>
-                    <Text style={styles.pulseIcon}>🚗🔊</Text>
-                    <Text style={styles.pulseTag}>Driver-Seat Sweet Spot Center</Text>
-                    <Text style={styles.pulseSub}>Linkwitz-Riley 24dB • 14-Band Parametric EQ • Port Subsonic Active</Text>
-                  </View>
-                </View>
-
-                <View style={styles.videoAmbientBacklight} />
-              </View>
-
-              {/* KEY STATS BAR */}
+              {/* STATS BAR */}
               <View style={styles.statsBar}>
                 <View style={styles.statCell}>
                   <Text style={styles.statVal}>100+</Text>
@@ -1256,6 +1315,145 @@ const styles = StyleSheet.create({
     maxWidth: 620,
     marginBottom: 24
   },
+
+  // CINEMATIC STORYBOARD PLAYER STYLES
+  cinematicPlayerCard: {
+    width: '100%',
+    maxWidth: 720,
+    backgroundColor: '#070b14',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(6, 182, 212, 0.35)',
+    overflow: 'hidden',
+    marginBottom: 24,
+    position: 'relative'
+  },
+  playerTopBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    backgroundColor: '#040710',
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.06)'
+  },
+  playerDotGroup: {
+    flexDirection: 'row',
+    gap: 6
+  },
+  dotRed: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#ef4444' },
+  dotYellow: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#f59e0b' },
+  dotGreen: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#10b981' },
+  playerHUDTag: {
+    color: '#38bdf8',
+    fontSize: 9,
+    fontFamily: 'monospace',
+    fontWeight: 'bold'
+  },
+  pausePlayBtn: {
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 4
+  },
+  pausePlayText: {
+    color: '#cbd5e1',
+    fontSize: 9,
+    fontWeight: 'bold'
+  },
+  screenFrame: {
+    width: '100%',
+    height: 380,
+    position: 'relative',
+    backgroundColor: '#000000'
+  },
+  cinematicImage: {
+    width: '100%',
+    height: '100%'
+  },
+  captionOverlay: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'rgba(3, 7, 18, 0.85)',
+    padding: 14,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(6, 182, 212, 0.3)'
+  },
+  captionHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 4
+  },
+  captionTag: {
+    color: '#06b6d4',
+    fontSize: 9,
+    fontWeight: 'bold',
+    fontFamily: 'monospace'
+  },
+  captionIndex: {
+    color: '#94a3b8',
+    fontSize: 9,
+    fontFamily: 'monospace'
+  },
+  captionTitle: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 2
+  },
+  captionDesc: {
+    color: '#cbd5e1',
+    fontSize: 12,
+    lineHeight: 16
+  },
+  shotScrubberRow: {
+    flexDirection: 'row',
+    backgroundColor: '#040710',
+    paddingVertical: 8,
+    paddingHorizontal: 8,
+    gap: 6
+  },
+  scrubberTab: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 8,
+    backgroundColor: '#0a101f',
+    borderRadius: 6,
+    gap: 4
+  },
+  scrubberTabActive: {
+    backgroundColor: 'rgba(6, 182, 212, 0.15)',
+    borderWidth: 1,
+    borderColor: '#06b6d4'
+  },
+  scrubberDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#475569'
+  },
+  scrubberDotActive: {
+    backgroundColor: '#06b6d4'
+  },
+  scrubberTitle: {
+    color: '#94a3b8',
+    fontSize: 10,
+    fontWeight: '600'
+  },
+  playerBottomGlow: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 3,
+    backgroundColor: '#06b6d4'
+  },
+
   heroBtnRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -1289,99 +1487,6 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     fontSize: 14,
     fontWeight: '600'
-  },
-  videoShowcaseContainer: {
-    width: '100%',
-    maxWidth: 720,
-    backgroundColor: '#0a101f',
-    borderWidth: 1,
-    borderColor: 'rgba(6, 182, 212, 0.3)',
-    borderRadius: 16,
-    overflow: 'hidden',
-    position: 'relative',
-    marginBottom: 24
-  },
-  videoShowcaseHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    backgroundColor: '#070b14',
-    borderBottomWidth: 1,
-    borderBottomColor: '#1e293b',
-    gap: 6
-  },
-  videoDotRed: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#ef4444' },
-  videoDotYellow: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#f59e0b' },
-  videoDotGreen: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#10b981' },
-  videoHeaderTitle: {
-    color: '#64748b',
-    fontSize: 10,
-    fontFamily: 'monospace',
-    marginLeft: 8
-  },
-  simulationPreview: {
-    height: 180,
-    backgroundColor: '#070d18',
-    justifyContent: 'center',
-    alignItems: 'center',
-    position: 'relative'
-  },
-  hudMetricTopLeft: {
-    position: 'absolute',
-    top: 12,
-    left: 14
-  },
-  hudMetricTopRight: {
-    position: 'absolute',
-    top: 12,
-    right: 14,
-    alignItems: 'flex-end'
-  },
-  hudLabel: {
-    color: '#64748b',
-    fontSize: 9,
-    fontFamily: 'monospace'
-  },
-  hudValue: {
-    color: '#10b981',
-    fontSize: 12,
-    fontWeight: 'bold',
-    fontFamily: 'monospace'
-  },
-  hudValueCyan: {
-    color: '#06b6d4',
-    fontSize: 12,
-    fontWeight: 'bold',
-    fontFamily: 'monospace'
-  },
-  centerSimulationPulse: {
-    alignItems: 'center'
-  },
-  pulseIcon: {
-    fontSize: 32,
-    marginBottom: 4
-  },
-  pulseTag: {
-    color: '#ffffff',
-    fontSize: 14,
-    fontWeight: 'bold'
-  },
-  pulseSub: {
-    color: '#38bdf8',
-    fontSize: 11,
-    marginTop: 2
-  },
-  videoAmbientBacklight: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: 4,
-    backgroundColor: '#06b6d4',
-    shadowColor: '#06b6d4',
-    shadowRadius: 10,
-    shadowOpacity: 0.8
   },
   statsBar: {
     flexDirection: 'row',

@@ -1,8 +1,8 @@
-import React, { useRef, useEffect, useState, useMemo } from 'react';
-import { Platform, StyleSheet, View, Text } from 'react-native';
+import React, { useRef, useEffect, useState } from 'react';
+import { Platform, StyleSheet, View, Text, Image } from 'react-native';
 import { motion, useScroll, useTransform, AnimatePresence, useReducedMotion } from 'framer-motion';
 
-// Asset paths
+// 8K Photorealistic Storyboard Shots
 const SHOT_IMAGES = [
   require('@/assets/images/shot1_exterior.jpg'),
   require('@/assets/images/shot2_door_open.jpg'),
@@ -11,7 +11,6 @@ const SHOT_IMAGES = [
 ];
 
 export default function HeroScrollSequence({ onEnterStudio }) {
-  // Gate for Native platforms (iOS/Android via Expo)
   if (Platform.OS !== 'web') {
     return <NativeFallbackSlideshow onEnterStudio={onEnterStudio} />;
   }
@@ -29,15 +28,7 @@ function WebHeroScrollSequence({ onEnterStudio }) {
   const sfxTriggeredRef = useRef({ whoosh: false, beep: false, sub: false });
 
   const prefersReducedMotion = useReducedMotion();
-  const [activeStage, setActiveStage] = useState(0); // 0: Shot1, 1: Shot2, 2: Shot3, 3: Shot4
-
-  // Preload images before paint
-  useEffect(() => {
-    SHOT_IMAGES.forEach((imgSrc) => {
-      const img = new window.Image();
-      img.src = typeof imgSrc === 'string' ? imgSrc : imgSrc.uri || imgSrc;
-    });
-  }, []);
+  const [activeStage, setActiveStage] = useState(0);
 
   // Framer Motion Scroll Progress (0.0 -> 1.0 across 400vh)
   const { scrollYProgress } = useScroll({
@@ -48,31 +39,24 @@ function WebHeroScrollSequence({ onEnterStudio }) {
   // -------------------------------------------------------------
   // 1. OPACITY TRANSFORMS (Breakpoints: 0->0.3, 0.3->0.6, 0.6->1.0)
   // -------------------------------------------------------------
-  // Shot 1: Visible from 0 to 0.3, fades out 0.25 -> 0.35
-  const opacity1 = useTransform(scrollYProgress, [0, 0.25, 0.35], [1, 1, 0]);
+  const opacity1 = useTransform(scrollYProgress, [0, 0.22, 0.34], [1, 1, 0]);
+  const opacity2 = useTransform(scrollYProgress, [0.22, 0.34, 0.54, 0.64], [0, 1, 1, 0]);
+  const opacity3 = useTransform(scrollYProgress, [0.54, 0.64, 0.76, 0.84], [0, 1, 1, 0]);
+  const opacity4 = useTransform(scrollYProgress, [0.76, 0.84, 1.0], [0, 1, 1]);
 
-  // Shot 2: Fades in 0.25 -> 0.35, stays till 0.55, fades out 0.55 -> 0.65
-  const opacity2 = useTransform(scrollYProgress, [0.25, 0.35, 0.55, 0.65], [0, 1, 1, 0]);
-
-  // Shot 3: Fades in 0.55 -> 0.65, stays till 0.75, fades out 0.75 -> 0.85
-  const opacity3 = useTransform(scrollYProgress, [0.55, 0.65, 0.75, 0.85], [0, 1, 1, 0]);
-
-  // Shot 4: Fades in 0.75 -> 0.85, stays 1.0
-  const opacity4 = useTransform(scrollYProgress, [0.75, 0.85, 1.0], [0, 1, 1]);
-
-  // WebGL Soundwave Overlay Opacity (Active during Shot 4)
-  const webglOpacity = useTransform(scrollYProgress, [0.75, 0.88, 1.0], [0, 0.85, 1.0]);
+  // WebGL Soundwave Overlay Opacity
+  const webglOpacity = useTransform(scrollYProgress, [0.76, 0.86, 1.0], [0, 0.85, 1.0]);
 
   // -------------------------------------------------------------
-  // 2. KEN BURNS SCALE TRANSFORMS (Disabled if prefers-reduced-motion)
+  // 2. KEN BURNS SCALE TRANSFORMS
   // -------------------------------------------------------------
-  const scale1 = useTransform(scrollYProgress, [0, 0.35], prefersReducedMotion ? [1, 1] : [1.0, 1.08]);
-  const scale2 = useTransform(scrollYProgress, [0.25, 0.65], prefersReducedMotion ? [1, 1] : [1.02, 1.10]);
-  const scale3 = useTransform(scrollYProgress, [0.55, 0.85], prefersReducedMotion ? [1, 1] : [1.0, 1.12]);
-  const scale4 = useTransform(scrollYProgress, [0.75, 1.0], prefersReducedMotion ? [1, 1] : [1.04, 1.15]);
+  const scale1 = useTransform(scrollYProgress, [0, 0.34], prefersReducedMotion ? [1, 1] : [1.0, 1.08]);
+  const scale2 = useTransform(scrollYProgress, [0.22, 0.64], prefersReducedMotion ? [1, 1] : [1.02, 1.10]);
+  const scale3 = useTransform(scrollYProgress, [0.54, 0.84], prefersReducedMotion ? [1, 1] : [1.0, 1.12]);
+  const scale4 = useTransform(scrollYProgress, [0.76, 1.0], prefersReducedMotion ? [1, 1] : [1.04, 1.15]);
 
   // -------------------------------------------------------------
-  // 3. AUDIO CONTEXT & SFX ENGINE (Whoosh @ 0.28, Beep @ 0.58, Sub-bass @ 0.85)
+  // 3. AUDIO CONTEXT & SFX ENGINE
   // -------------------------------------------------------------
   const initAudioOnGesture = () => {
     if (!audioCtxRef.current) {
@@ -153,32 +137,29 @@ function WebHeroScrollSequence({ onEnterStudio }) {
     osc.stop(ctx.currentTime + 0.8);
   };
 
-  // Track progress to fire SFX once and update HUD stage
   useEffect(() => {
     const unsubscribe = scrollYProgress.on('change', (p) => {
-      // Resume AudioContext on first scroll
       initAudioOnGesture();
 
-      // Determine active stage for HUD
-      if (p < 0.3) {
+      if (p < 0.28) {
         setActiveStage(0);
-      } else if (p < 0.6) {
+      } else if (p < 0.58) {
         setActiveStage(1);
-      } else if (p < 0.8) {
+      } else if (p < 0.82) {
         setActiveStage(2);
       } else {
         setActiveStage(3);
       }
 
-      // SFX 1: Whoosh (Door opens around 0.28)
+      // Whoosh (Door opens)
       if (p >= 0.28 && !sfxTriggeredRef.current.whoosh) {
         sfxTriggeredRef.current.whoosh = true;
         playWhoosh();
-      } else if (p < 0.22) {
+      } else if (p < 0.20) {
         sfxTriggeredRef.current.whoosh = false;
       }
 
-      // SFX 2: Beep (Touchscreen activation around 0.58)
+      // Beep (Screen activation)
       if (p >= 0.58 && !sfxTriggeredRef.current.beep) {
         sfxTriggeredRef.current.beep = true;
         playBeep();
@@ -186,11 +167,11 @@ function WebHeroScrollSequence({ onEnterStudio }) {
         sfxTriggeredRef.current.beep = false;
       }
 
-      // SFX 3: Sub-bass sweep (Holographic soundwave focus around 0.85)
-      if (p >= 0.85 && !sfxTriggeredRef.current.sub) {
+      // Sub-bass sweep (Holographic focus)
+      if (p >= 0.82 && !sfxTriggeredRef.current.sub) {
         sfxTriggeredRef.current.sub = true;
         playSubBassSweep();
-      } else if (p < 0.78) {
+      } else if (p < 0.75) {
         sfxTriggeredRef.current.sub = false;
       }
     });
@@ -199,7 +180,7 @@ function WebHeroScrollSequence({ onEnterStudio }) {
   }, [scrollYProgress]);
 
   // -------------------------------------------------------------
-  // 4. SHOT-4 WEBGL SOUNDWAVE SHADER OVERLAY (Untouched WebGL logic)
+  // 4. WEBGL CONCENTRIC SOUNDWAVE SHADER OVERLAY
   // -------------------------------------------------------------
   useEffect(() => {
     if (prefersReducedMotion) return;
@@ -224,21 +205,18 @@ function WebHeroScrollSequence({ onEnterStudio }) {
       uniform float u_time;
 
       void main() {
-        vec2 center = vec2(0.68, 0.45); // Driver headrest position
+        vec2 center = vec2(0.68, 0.45);
         vec2 uv = v_uv;
         float dist = distance(uv, center);
 
-        // Concentric expanding ring waves
         float wave = sin(dist * 45.0 - u_time * 4.0);
         float ringIntensity = smoothstep(0.7, 1.0, wave) * exp(-dist * 2.5);
 
-        // Secondary speaker dispersion waves
         vec2 speakerFL = vec2(0.25, 0.65);
         float distFL = distance(uv, speakerFL);
         float waveFL = sin(distFL * 35.0 - u_time * 3.5);
         float flIntensity = smoothstep(0.8, 1.0, waveFL) * exp(-distFL * 3.0);
 
-        // Neon Cyan (#06b6d4) & Cyber Violet (#8b5cf6) blend
         vec3 cyan = vec3(0.024, 0.714, 0.831);
         vec3 violet = vec3(0.545, 0.361, 0.965);
         vec3 color = mix(cyan, violet, sin(u_time + dist * 5.0) * 0.5 + 0.5);
@@ -295,8 +273,11 @@ function WebHeroScrollSequence({ onEnterStudio }) {
       ref={containerRef}
       style={{
         position: 'relative',
-        height: '400vh', // 400vh pinned sequence
+        height: '350vh',
         backgroundColor: '#020617',
+        width: '100%',
+        borderRadius: 16,
+        overflow: 'visible',
       }}
     >
       {/* Sticky Viewport Container */}
@@ -305,78 +286,91 @@ function WebHeroScrollSequence({ onEnterStudio }) {
           position: 'sticky',
           top: 0,
           left: 0,
-          width: '100vw',
-          height: '100vh',
+          width: '100%',
+          height: '80vh',
+          minHeight: 520,
+          maxHeight: 700,
           overflow: 'hidden',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
+          borderRadius: 16,
+          border: '1px solid rgba(6, 182, 212, 0.3)',
           backgroundColor: '#020617',
         }}
       >
         {/* SHOT 1: EXTERIOR REVEAL */}
-        <motion.img
-          src={SHOT_IMAGES[0]}
-          alt="Car Exterior Reveal"
+        <motion.div
           style={{
             position: 'absolute',
             inset: 0,
             width: '100%',
             height: '100%',
-            objectFit: 'cover',
             opacity: opacity1,
             scale: scale1,
             zIndex: 1,
           }}
-        />
+        >
+          <Image
+            source={SHOT_IMAGES[0]}
+            style={{ width: '100%', height: '100%' }}
+            resizeMode="cover"
+          />
+        </motion.div>
 
         {/* SHOT 2: DOOR OPEN & COCKPIT INGRESS */}
-        <motion.img
-          src={SHOT_IMAGES[1]}
-          alt="Door Open Cockpit Ingress"
+        <motion.div
           style={{
             position: 'absolute',
             inset: 0,
             width: '100%',
             height: '100%',
-            objectFit: 'cover',
             opacity: opacity2,
             scale: scale2,
             zIndex: 2,
           }}
-        />
+        >
+          <Image
+            source={SHOT_IMAGES[1]}
+            style={{ width: '100%', height: '100%' }}
+            resizeMode="cover"
+          />
+        </motion.div>
 
         {/* SHOT 3: TOUCHSCREEN HEAD UNIT HUD */}
-        <motion.img
-          src={SHOT_IMAGES[2]}
-          alt="Touchscreen Head Unit DSP"
+        <motion.div
           style={{
             position: 'absolute',
             inset: 0,
             width: '100%',
             height: '100%',
-            objectFit: 'cover',
             opacity: opacity3,
             scale: scale3,
             zIndex: 3,
           }}
-        />
+        >
+          <Image
+            source={SHOT_IMAGES[2]}
+            style={{ width: '100%', height: '100%' }}
+            resizeMode="cover"
+          />
+        </motion.div>
 
         {/* SHOT 4: HOLOGRAPHIC SOUNDWAVES */}
-        <motion.img
-          src={SHOT_IMAGES[3]}
-          alt="Holographic Soundwaves Cabin"
+        <motion.div
           style={{
             position: 'absolute',
             inset: 0,
             width: '100%',
             height: '100%',
-            objectFit: 'cover',
             opacity: opacity4,
             scale: scale4,
             zIndex: 4,
           }}
-        />
+        >
+          <Image
+            source={SHOT_IMAGES[3]}
+            style={{ width: '100%', height: '100%' }}
+            resizeMode="cover"
+          />
+        </motion.div>
 
         {/* WEBGL SOUNDWAVE SHADER OVERLAY CANVAS */}
         {!prefersReducedMotion && (
@@ -401,7 +395,7 @@ function WebHeroScrollSequence({ onEnterStudio }) {
           style={{
             position: 'absolute',
             inset: 0,
-            background: 'radial-gradient(circle at center, transparent 40%, rgba(2, 6, 23, 0.75) 100%)',
+            background: 'radial-gradient(circle at center, transparent 35%, rgba(2, 6, 23, 0.8) 100%)',
             pointerEvents: 'none',
             zIndex: 6,
           }}
@@ -410,12 +404,12 @@ function WebHeroScrollSequence({ onEnterStudio }) {
         {/* ------------------------------------------------------------- */}
         {/* DOM-BASED HUD OVERLAYS WITH AnimatePresence                   */}
         {/* ------------------------------------------------------------- */}
-        <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 10, padding: 32 }}>
+        <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 10, padding: 24, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
           {/* Top HUD Telemetry */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <div style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#06b6d4', boxShadow: '0 0 10px #06b6d4' }} />
-              <span style={{ color: '#06b6d4', fontFamily: 'monospace', fontSize: 12, fontWeight: 'bold', letterSpacing: 1.5 }}>
+              <span style={{ color: '#06b6d4', fontFamily: 'monospace', fontSize: 11, fontWeight: 'bold', letterSpacing: 1.5 }}>
                 CARAUDIO.AI // SCROLLYTELLING ENGINE
               </span>
             </div>
@@ -425,10 +419,10 @@ function WebHeroScrollSequence({ onEnterStudio }) {
                 <div
                   key={step}
                   style={{
-                    width: 28,
+                    width: 24,
                     height: 3,
                     borderRadius: 2,
-                    backgroundColor: activeStage >= step ? '#06b6d4' : 'rgba(255,255,255,0.15)',
+                    backgroundColor: activeStage >= step ? '#06b6d4' : 'rgba(255,255,255,0.2)',
                     transition: 'background-color 0.3s ease',
                   }}
                 />
@@ -441,20 +435,27 @@ function WebHeroScrollSequence({ onEnterStudio }) {
             {activeStage === 0 && (
               <motion.div
                 key="hud-stage-0"
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.4, ease: 'easeOut' }}
-                style={{ position: 'absolute', bottom: 48, left: 36, maxWidth: 440 }}
+                exit={{ opacity: 0, y: -15 }}
+                transition={{ duration: 0.35, ease: 'easeOut' }}
+                style={{
+                  backgroundColor: 'rgba(7, 11, 20, 0.85)',
+                  backdropFilter: 'blur(16px)',
+                  border: '1px solid rgba(6, 182, 212, 0.3)',
+                  borderRadius: 12,
+                  padding: 16,
+                  maxWidth: 440,
+                }}
               >
-                <div style={{ color: '#38bdf8', fontSize: 11, fontFamily: 'monospace', fontWeight: 'bold', marginBottom: 4 }}>
+                <div style={{ color: '#38bdf8', fontSize: 10, fontFamily: 'monospace', fontWeight: 'bold', marginBottom: 2 }}>
                   STAGE 01 // EXTERIOR SCAN
                 </div>
-                <h2 style={{ color: '#ffffff', fontSize: 28, fontWeight: 900, margin: '0 0 8px 0', letterSpacing: -0.5 }}>
+                <h3 style={{ color: '#ffffff', fontSize: 20, fontWeight: 900, margin: '0 0 4px 0' }}>
                   The Precision Acoustic Baseline
-                </h2>
-                <p style={{ color: '#94a3b8', fontSize: 14, lineHeight: 1.5, margin: 0 }}>
-                  Scanning vehicle chassis volume and cabin boundaries. Scroll down to enter the acoustic stage.
+                </h3>
+                <p style={{ color: '#94a3b8', fontSize: 12, lineHeight: 1.4, margin: 0 }}>
+                  Scanning chassis volume and cabin dimensions. Scroll down to enter the acoustic stage.
                 </p>
               </motion.div>
             )}
@@ -462,19 +463,26 @@ function WebHeroScrollSequence({ onEnterStudio }) {
             {activeStage === 1 && (
               <motion.div
                 key="hud-stage-1"
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.4, ease: 'easeOut' }}
-                style={{ position: 'absolute', bottom: 48, left: 36, maxWidth: 440 }}
+                exit={{ opacity: 0, y: -15 }}
+                transition={{ duration: 0.35, ease: 'easeOut' }}
+                style={{
+                  backgroundColor: 'rgba(7, 11, 20, 0.85)',
+                  backdropFilter: 'blur(16px)',
+                  border: '1px solid rgba(168, 85, 247, 0.4)',
+                  borderRadius: 12,
+                  padding: 16,
+                  maxWidth: 440,
+                }}
               >
-                <div style={{ color: '#a855f7', fontSize: 11, fontFamily: 'monospace', fontWeight: 'bold', marginBottom: 4 }}>
+                <div style={{ color: '#a855f7', fontSize: 10, fontFamily: 'monospace', fontWeight: 'bold', marginBottom: 2 }}>
                   STAGE 02 // COCKPIT INGRESS
                 </div>
-                <h2 style={{ color: '#ffffff', fontSize: 28, fontWeight: 900, margin: '0 0 8px 0', letterSpacing: -0.5 }}>
+                <h3 style={{ color: '#ffffff', fontSize: 20, fontWeight: 900, margin: '0 0 4px 0' }}>
                   Asymmetrical Seating Matrix
-                </h2>
-                <p style={{ color: '#94a3b8', fontSize: 14, lineHeight: 1.5, margin: 0 }}>
+                </h3>
+                <p style={{ color: '#94a3b8', fontSize: 12, lineHeight: 1.4, margin: 0 }}>
                   Driver sits 95cm from right speaker vs 138cm from left. 1.25ms phase clash detected.
                 </p>
               </motion.div>
@@ -488,24 +496,21 @@ function WebHeroScrollSequence({ onEnterStudio }) {
                 exit={{ opacity: 0, scale: 1.05 }}
                 transition={{ type: 'spring', damping: 20, stiffness: 120 }}
                 style={{
-                  position: 'absolute',
-                  bottom: 48,
-                  left: 36,
-                  backgroundColor: 'rgba(7, 11, 20, 0.85)',
+                  backgroundColor: 'rgba(7, 11, 20, 0.88)',
                   backdropFilter: 'blur(16px)',
                   border: '1px solid rgba(6, 182, 212, 0.4)',
                   borderRadius: 12,
-                  padding: 20,
+                  padding: 18,
                   maxWidth: 420,
                 }}
               >
-                <div style={{ color: '#06b6d4', fontSize: 11, fontFamily: 'monospace', fontWeight: 'bold', marginBottom: 6 }}>
+                <div style={{ color: '#06b6d4', fontSize: 10, fontFamily: 'monospace', fontWeight: 'bold', marginBottom: 4 }}>
                   STAGE 03 // 14-BAND PARAMETRIC DSP
                 </div>
-                <div style={{ color: '#ffffff', fontSize: 20, fontWeight: 'bold', marginBottom: 4 }}>
+                <div style={{ color: '#ffffff', fontSize: 18, fontWeight: 'bold', marginBottom: 4 }}>
                   Target EQ Curve Applied
                 </div>
-                <div style={{ color: '#cbd5e1', fontSize: 12, lineHeight: 1.6, fontFamily: 'monospace' }}>
+                <div style={{ color: '#cbd5e1', fontSize: 11, lineHeight: 1.5, fontFamily: 'monospace' }}>
                   +5.5dB @ 63Hz (Port Resonance)<br />
                   -1.5dB @ 200Hz (Cabin Standing Notch)<br />
                   -1.0dB @ 4kHz (Windshield Glass Tamer)
@@ -521,29 +526,26 @@ function WebHeroScrollSequence({ onEnterStudio }) {
                 exit={{ opacity: 0, scale: 1.05 }}
                 transition={{ type: 'spring', damping: 18, stiffness: 100 }}
                 style={{
-                  position: 'absolute',
-                  bottom: 48,
-                  left: 36,
-                  backgroundColor: 'rgba(6, 78, 59, 0.85)',
+                  backgroundColor: 'rgba(6, 78, 59, 0.90)',
                   backdropFilter: 'blur(16px)',
                   border: '1px solid rgba(16, 185, 129, 0.6)',
                   borderRadius: 12,
-                  padding: 22,
+                  padding: 20,
                   maxWidth: 460,
                   pointerEvents: 'auto',
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
                   <div style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#10b981', boxShadow: '0 0 10px #10b981' }} />
-                  <span style={{ color: '#34d399', fontSize: 11, fontFamily: 'monospace', fontWeight: 'bold' }}>
+                  <span style={{ color: '#34d399', fontSize: 10, fontFamily: 'monospace', fontWeight: 'bold' }}>
                     PHASE COHERENCE: 99.8% LOCKED
                   </span>
                 </div>
-                <div style={{ color: '#ffffff', fontSize: 22, fontWeight: 900, marginBottom: 6 }}>
+                <div style={{ color: '#ffffff', fontSize: 20, fontWeight: 900, marginBottom: 4 }}>
                   Laser Soundstage Focus
                 </div>
-                <p style={{ color: '#d1fae5', fontSize: 13, lineHeight: 1.4, margin: '0 0 14px 0' }}>
-                  All 5 speaker waves arriving simultaneously at driver headrest. Ready for physical amplifier calibration.
+                <p style={{ color: '#d1fae5', fontSize: 12, lineHeight: 1.4, margin: '0 0 12px 0' }}>
+                  All 5 speaker waves arriving simultaneously at driver headrest. Ready for physical calibration.
                 </p>
 
                 {onEnterStudio && (
@@ -567,21 +569,6 @@ function WebHeroScrollSequence({ onEnterStudio }) {
               </motion.div>
             )}
           </AnimatePresence>
-
-          {/* Scroll Prompt Hint */}
-          <div
-            style={{
-              position: 'absolute',
-              bottom: 16,
-              right: 36,
-              color: '#64748b',
-              fontSize: 11,
-              fontFamily: 'monospace',
-              letterSpacing: 1,
-            }}
-          >
-            SCROLL TO SCRUB 343 M/S ACOUSTIC TIMELINE ↓
-          </div>
         </div>
       </div>
     </div>
@@ -590,7 +577,6 @@ function WebHeroScrollSequence({ onEnterStudio }) {
 
 /**
  * Native Platform Fallback (iOS/Android)
- * Renders a lightweight, non-scroll-scrubbed looping slideshow with CTA
  */
 function NativeFallbackSlideshow({ onEnterStudio }) {
   const [currentIdx, setCurrentIdx] = useState(0);

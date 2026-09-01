@@ -1,0 +1,30 @@
+fastapi==0.100.0
+uvicorn[standard]==0.23.0
+sqlalchemy==2.0.0
+psycopg2-binary==2.9.6
+pydantic==2.0.0
+pydantic-settings==2.0.0
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+python-multipart==0.0.6
+
+# Payments
+razorpay==1.4.0
+
+# Authentication (Twilio for OTP)
+twilio==8.5.0
+
+# Audio Processing
+numpy==1.25.0
+scipy==1.11.0
+
+# DigitalOcean Spaces (S3-compatible)
+boto3==1.28.0
+
+# Error Tracking
+sentry-sdk[fastapi]==1.28.0
+
+# Development
+pytest==7.4.0
+pytest-cov==4.1.0
+black==23.7.0

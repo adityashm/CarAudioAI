@@ -1,0 +1,65 @@
+name: Deploy Backend to DigitalOcean
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'backend/**'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Deploy to DigitalOcean Droplet
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.DO_HOST }}
+          username: ${{ secrets.DO_USERNAME }}
+          key: ${{ secrets.DO_SSH_KEY }}
+          port: 22
+          script: |
+            echo "🚀 Starting deployment..."
+            
+            # Navigate to app directory
+            cd /var/www/caraudioai
+            
+            # Pull latest changes
+            echo "📥 Pulling latest code..."
+            git pull origin main
+            
+            # Activate virtual environment
+            echo "🔧 Activating virtual environment..."
+            source venv/bin/activate
+            
+            # Install/update dependencies
+            echo "📦 Installing dependencies..."
+            cd backend
+            pip install -r requirements.txt --quiet
+            
+            # Run database migrations (when Alembic is setup)
+            # echo "🗄️ Running database migrations..."
+            # alembic upgrade head
+            
+            # Restart the application
+            echo "♻️ Restarting application..."
+            sudo systemctl restart caraudioai
+            
+            # Check status
+            echo "✅ Checking application status..."
+            sudo systemctl status caraudioai --no-pager
+            
+            echo "✨ Deployment completed successfully!"
+      
+      - name: Notify deployment status
+        if: always()
+        run: |
+          if [ ${{ job.status }} == 'success' ]; then
+            echo "✅ Deployment successful!"
+          else
+            echo "❌ Deployment failed!"
+          fi

@@ -1,0 +1,390 @@
+[
+  {
+    "make": "Maruti Suzuki",
+    "model": "Swift",
+    "variants": [
+      {
+        "variant": "VXi/ZXi",
+        "year": "2018-2024",
+        "factory_head_unit": "SmartPlay Studio",
+        "front_speaker_size": "6.5 inch",
+        "rear_speaker_size": "6.5 inch",
+        "tweeter_location": "A-pillar",
+        "specs": {
+          "front_door_depth_mm": 65,
+          "rear_door_depth_mm": 55,
+          "deck_size": "2-DIN"
+        }
+      }
+    ]
+  },
+  {
+    "make": "Maruti Suzuki",
+    "model": "Baleno",
+    "variants": [
+      {
+        "variant": "Delta/Zeta/Alpha",
+        "year": "2019-2024",
+        "factory_head_unit": "SmartPlay Studio",
+        "front_speaker_size": "6.5 inch",
+        "rear_speaker_size": "6.5 inch",
+        "tweeter_location": "Door",
+        "specs": {
+          "front_door_depth_mm": 70,
+          "rear_door_depth_mm": 60,
+          "deck_size": "2-DIN"
+        }
+      }
+    ]
+  },
+  {
+    "make": "Maruti Suzuki",
+    "model": "Brezza",
+    "variants": [
+      {
+        "variant": "VXi/ZXi",
+        "year": "2020-2024",
+        "factory_head_unit": "SmartPlay Studio",
+        "front_speaker_size": "6.5 inch",
+        "rear_speaker_size": "6.5 inch",
+        "tweeter_location": "A-pillar",
+        "specs": {
+          "front_door_depth_mm": 75,
+          "rear_door_depth_mm": 65,
+          "deck_size": "2-DIN"
+        }
+      }
+    ]
+  },
+  {
+    "make": "Maruti Suzuki",
+    "model": "Ertiga",
+    "variants": [
+      {
+        "variant": "VXi/ZXi",
+        "year": "2018-2024",
+        "factory_head_unit": "SmartPlay Studio",
+        "front_speaker_size": "6.5 inch",
+        "rear_speaker_size": "6.5 inch",
+        "tweeter_location": "Door",
+        "specs": {
+          "front_door_depth_mm": 70,
+          "rear_door_depth_mm": 60,
+          "deck_size": "2-DIN"
+        }
+      }
+    ]
+  },
+  {
+    "make": "Maruti Suzuki",
+    "model": "Dzire",
+    "variants": [
+      {
+        "variant": "VXi/ZXi",
+        "year": "2017-2024",
+        "factory_head_unit": "SmartPlay Studio",
+        "front_speaker_size": "6.5 inch",
+        "rear_speaker_size": "6.5 inch",
+        "tweeter_location": "Door",
+        "specs": {
+          "front_door_depth_mm": 65,
+          "rear_door_depth_mm": 55,
+          "deck_size": "2-DIN"
+        }
+      }
+    ]
+  },
+  {
+    "make": "Hyundai",
+    "model": "Creta",
+    "variants": [
+      {
+        "variant": "SX/SX(O)",
+        "year": "2020-2024",
+        "factory_head_unit": "BlueLink Connected",
+        "front_speaker_size": "6.5 inch",
+        "rear_speaker_size": "6.5 inch",
+        "tweeter_location": "A-pillar",
+        "specs": {
+          "front_door_depth_mm": 80,
+          "rear_door_depth_mm": 70,
+          "deck_size": "2-DIN"
+        }
+      }
+    ]
+  },
+  {
+    "make": "Hyundai",
+    "model": "Verna",
+    "variants": [
+      {
+        "variant": "SX/SX(O)",
+        "year": "2020-2024",
+        "factory_head_unit": "BlueLink Connected",
+        "front_speaker_size": "6.5 inch",
+        "rear_speaker_size": "6.5 inch",
+        "tweeter_location": "A-pillar",
+        "specs": {
+          "front_door_depth_mm": 75,
+          "rear_door_depth_mm": 65,
+          "deck_size": "2-DIN"
+        }
+      }
+    ]
+  },
+  {
+    "make": "Hyundai",
+    "model": "i20",
+    "variants": [
+      {
+        "variant": "Asta/Asta(O)",
+        "year": "2020-2024",
+        "factory_head_unit": "BlueLink Connected",
+        "front_speaker_size": "6.5 inch",
+        "rear_speaker_size": "5 inch",
+        "tweeter_location": "A-pillar",
+        "specs": {
+          "front_door_depth_mm": 70,
+          "rear_door_depth_mm": 50,
+          "deck_size": "2-DIN"
+        }
+      }
+    ]
+  },
+  {
+    "make": "Hyundai",
+    "model": "Venue",
+    "variants": [
+      {
+        "variant": "SX/SX(O)",
+        "year": "2019-2024",
+        "factory_head_unit": "BlueLink Connected",
+        "front_speaker_size": "6.5 inch",
+        "rear_speaker_size": "6.5 inch",
+        "tweeter_location": "Door",
+        "specs": {
+          "front_door_depth_mm": 75,
+          "rear_door_depth_mm": 65,
+          "deck_size": "2-DIN"
+        }
+      }
+    ]
+  },
+  {
+    "make": "Tata",
+    "model": "Nexon",
+    "variants": [
+      {
+        "variant": "XZ/XZ+/XZA+",
+        "year": "2020-2024",
+        "factory_head_unit": "Harman Infotainment",
+        "front_speaker_size": "6.5 inch",
+        "rear_speaker_size": "6.5 inch",
+        "tweeter_location": "A-pillar",
+        "specs": {
+          "front_door_depth_mm": 75,
+          "rear_door_depth_mm": 70,
+          "deck_size": "2-DIN"
+        }
+      }
+    ]
+  },
+  {
+    "make": "Tata",
+    "model": "Harrier",
+    "variants": [
+      {
+        "variant": "XZ/XZ+/XZA+",
+        "year": "2019-2024",
+        "factory_head_unit": "Harman Infotainment",
+        "front_speaker_size": "6.5 inch",
+        "rear_speaker_size": "6.5 inch",
+        "tweeter_location": "A-pillar",
+        "specs": {
+          "front_door_depth_mm": 85,
+          "rear_door_depth_mm": 75,
+          "deck_size": "2-DIN"
+        }
+      }
+    ]
+  },
+  {
+    "make": "Tata",
+    "model": "Safari",
+    "variants": [
+      {
+        "variant": "XZ/XZ+/XZA+",
+        "year": "2021-2024",
+        "factory_head_unit": "Harman Infotainment",
+        "front_speaker_size": "6.5 inch",
+        "rear_speaker_size": "6.5 inch",
+        "tweeter_location": "A-pillar",
+        "specs": {
+          "front_door_depth_mm": 85,
+          "rear_door_depth_mm": 75,
+          "deck_size": "2-DIN"
+        }
+      }
+    ]
+  },
+  {
+    "make": "Mahindra",
+    "model": "XUV700",
+    "variants": [
+      {
+        "variant": "AX7/AX7L",
+        "year": "2021-2024",
+        "factory_head_unit": "Sony Premium Sound",
+        "front_speaker_size": "6.5 inch",
+        "rear_speaker_size": "6.5 inch",
+        "tweeter_location": "A-pillar",
+        "specs": {
+          "front_door_depth_mm": 90,
+          "rear_door_depth_mm": 80,
+          "deck_size": "2-DIN"
+        }
+      }
+    ]
+  },
+  {
+    "make": "Mahindra",
+    "model": "Thar",
+    "variants": [
+      {
+        "variant": "LX/AX",
+        "year": "2020-2024",
+        "factory_head_unit": "Touchscreen Infotainment",
+        "front_speaker_size": "6.5 inch",
+        "rear_speaker_size": "6.5 inch",
+        "tweeter_location": "Dashboard",
+        "specs": {
+          "front_door_depth_mm": 80,
+          "rear_door_depth_mm": 70,
+          "deck_size": "2-DIN"
+        }
+      }
+    ]
+  },
+  {
+    "make": "Kia",
+    "model": "Seltos",
+    "variants": [
+      {
+        "variant": "HTX/GTX",
+        "year": "2019-2024",
+        "factory_head_unit": "UVO Connect",
+        "front_speaker_size": "6.5 inch",
+        "rear_speaker_size": "6.5 inch",
+        "tweeter_location": "A-pillar",
+        "specs": {
+          "front_door_depth_mm": 80,
+          "rear_door_depth_mm": 70,
+          "deck_size": "2-DIN"
+        }
+      }
+    ]
+  },
+  {
+    "make": "Kia",
+    "model": "Sonet",
+    "variants": [
+      {
+        "variant": "HTX/GTX",
+        "year": "2020-2024",
+        "factory_head_unit": "UVO Connect",
+        "front_speaker_size": "6.5 inch",
+        "rear_speaker_size": "5 inch",
+        "tweeter_location": "A-pillar",
+        "specs": {
+          "front_door_depth_mm": 75,
+          "rear_door_depth_mm": 60,
+          "deck_size": "2-DIN"
+        }
+      }
+    ]
+  },
+  {
+    "make": "Honda",
+    "model": "City",
+    "variants": [
+      {
+        "variant": "V/VX/ZX",
+        "year": "2020-2024",
+        "factory_head_unit": "Honda Connect",
+        "front_speaker_size": "6.5 inch",
+        "rear_speaker_size": "6.5 inch",
+        "tweeter_location": "A-pillar",
+        "specs": {
+          "front_door_depth_mm": 75,
+          "rear_door_depth_mm": 65,
+          "deck_size": "2-DIN"
+        }
+      }
+    ]
+  },
+  {
+    "make": "Toyota",
+    "model": "Fortuner",
+    "variants": [
+      {
+        "variant": "4x2/4x4",
+        "year": "2016-2024",
+        "factory_head_unit": "Touchscreen Infotainment",
+        "front_speaker_size": "6.5 inch",
+        "rear_speaker_size": "6.5 inch",
+        "tweeter_location": "A-pillar",
+        "specs": {
+          "front_door_depth_mm": 90,
+          "rear_door_depth_mm": 80,
+          "deck_size": "2-DIN"
+        }
+      }
+    ]
+  },
+  {
+    "make": "MG",
+    "model": "Hector",
+    "variants": [
+      {
+        "variant": "Smart/Sharp/Savvy",
+        "year": "2019-2024",
+        "factory_head_unit": "i-SMART Infotainment",
+        "front_speaker_size": "6.5 inch",
+        "rear_speaker_size": "6.5 inch",
+        "tweeter_location": "A-pillar",
+        "specs": {
+          "front_door_depth_mm": 85,
+          "rear_door_depth_mm": 75,
+          "deck_size": "2-DIN"
+        }
+      }
+    ]
+  },
+  {
+    "make": "Skoda",
+    "model": "Kylaq",
+    "variants": [
+      {
+        "variant": "Classic/Signature/Prestige",
+        "year": "2024-2026",
+        "factory_head_unit": "8-inch / 10-inch Touchscreen",
+        "front_speaker_size": "6.5 inch",
+        "rear_speaker_size": "6.5 inch",
+        "tweeter_location": "A-pillar / Sail Panel",
+        "specs": {
+          "front_door_depth_mm": 72,
+          "rear_door_depth_mm": 65,
+          "deck_size": "2-DIN",
+          "wheelbase_mm": 2566,
+          "cabin_acoustic_distances_cm": {
+            "driver_to_front_left_cm": 95,
+            "driver_to_front_right_cm": 138,
+            "driver_to_rear_left_cm": 115,
+            "driver_to_rear_right_cm": 155,
+            "driver_to_subwoofer_boot_cm": 210
+          }
+        }
+      }
+    ]
+  }
+]

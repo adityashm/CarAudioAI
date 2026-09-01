@@ -1,0 +1,429 @@
+[
+  {
+    "category": "dsp",
+    "brand": "Pioneer",
+    "model": "DEH-80PRS",
+    "specs": {
+      "channels": 3,
+      "eq_bands": 31,
+      "time_alignment": true,
+      "max_delay_ms": 12.5,
+      "crossover": "Linkwitz-Riley 12/24dB",
+      "dsp_format": "XML"
+    },
+    "price_inr": 29999,
+    "amazon_link": "https://www.amazon.in/Pioneer-DEH-80PRS",
+    "flipkart_link": null
+  },
+  {
+    "category": "dsp",
+    "brand": "Sony",
+    "model": "RSX-GS9",
+    "specs": {
+      "channels": 8,
+      "eq_bands": 10,
+      "time_alignment": true,
+      "max_delay_ms": 20,
+      "crossover": "Butterworth/Linkwitz 12/18/24dB",
+      "dsp_format": "Proprietary"
+    },
+    "price_inr": 42999,
+    "amazon_link": "https://www.amazon.in/Sony-RSX-GS9",
+    "flipkart_link": null
+  },
+  {
+    "category": "dsp",
+    "brand": "Audison",
+    "model": "Bit One",
+    "specs": {
+      "channels": 8,
+      "eq_bands": 31,
+      "time_alignment": true,
+      "max_delay_ms": 15,
+      "crossover": "Linkwitz-Riley 6/12/24dB",
+      "dsp_format": "BIT"
+    },
+    "price_inr": 48999,
+    "amazon_link": null,
+    "flipkart_link": null
+  },
+  {
+    "category": "dsp",
+    "brand": "Helix",
+    "model": "DSP.3",
+    "specs": {
+      "channels": 10,
+      "eq_bands": 31,
+      "time_alignment": true,
+      "max_delay_ms": 20,
+      "crossover": "Linkwitz-Riley/Butterworth 6/12/18/24dB"
+    },
+    "price_inr": 65999,
+    "amazon_link": null,
+    "flipkart_link": null
+  },
+  {
+    "category": "amplifier",
+    "brand": "Pioneer",
+    "model": "GM-D9601",
+    "specs": {
+      "channels": 1,
+      "rms_power": 1200,
+      "impedance": "1-4 ohm",
+      "class": "D"
+    },
+    "price_inr": 18999,
+    "amazon_link": "https://www.amazon.in/Pioneer-GM-D9601",
+    "flipkart_link": "https://www.flipkart.com/pioneer-gm-d9601"
+  },
+  {
+    "category": "amplifier",
+    "brand": "Pioneer",
+    "model": "GM-D8604",
+    "specs": {
+      "channels": 4,
+      "rms_power": 100,
+      "impedance": "2-4 ohm",
+      "class": "D"
+    },
+    "price_inr": 15999,
+    "amazon_link": "https://www.amazon.in/Pioneer-GM-D8604",
+    "flipkart_link": "https://www.flipkart.com/pioneer-gm-d8604"
+  },
+  {
+    "category": "amplifier",
+    "brand": "Sony",
+    "model": "XM-N502",
+    "specs": {
+      "channels": 2,
+      "rms_power": 270,
+      "impedance": "2-4 ohm",
+      "class": "AB"
+    },
+    "price_inr": 12499,
+    "amazon_link": "https://www.amazon.in/Sony-XM-N502",
+    "flipkart_link": "https://www.flipkart.com/sony-xm-n502"
+  },
+  {
+    "category": "amplifier",
+    "brand": "JBL",
+    "model": "GT5-A604",
+    "specs": {
+      "channels": 4,
+      "rms_power": 75,
+      "impedance": "2-4 ohm",
+      "class": "D"
+    },
+    "price_inr": 11999,
+    "amazon_link": "https://www.amazon.in/JBL-GT5-A604",
+    "flipkart_link": "https://www.flipkart.com/jbl-gt5-a604"
+  },
+  {
+    "category": "amplifier",
+    "brand": "Rockford Fosgate",
+    "model": "R500X1D",
+    "specs": {
+      "channels": 1,
+      "rms_power": 500,
+      "impedance": "1-4 ohm",
+      "class": "D"
+    },
+    "price_inr": 16999,
+    "amazon_link": "https://www.amazon.in/Rockford-Fosgate-R500X1D",
+    "flipkart_link": null
+  },
+  {
+    "category": "speaker",
+    "brand": "Pioneer",
+    "model": "TS-G1645R",
+    "specs": {
+      "size": "6.5",
+      "type": "coaxial",
+      "frequency_response": "35-31000",
+      "impedance": 4,
+      "rms": 60,
+      "peak": 250
+    },
+    "price_inr": 2999,
+    "amazon_link": "https://www.amazon.in/Pioneer-TS-G1645R",
+    "flipkart_link": "https://www.flipkart.com/pioneer-ts-g1645r"
+  },
+  {
+    "category": "speaker",
+    "brand": "Pioneer",
+    "model": "TS-A1606C",
+    "specs": {
+      "size": "6.5",
+      "type": "component",
+      "frequency_response": "28-24000",
+      "impedance": 4,
+      "rms": 80,
+      "peak": 350
+    },
+    "price_inr": 6499,
+    "amazon_link": "https://www.amazon.in/Pioneer-TS-A1606C",
+    "flipkart_link": "https://www.flipkart.com/pioneer-ts-a1606c"
+  },
+  {
+    "category": "speaker",
+    "brand": "Sony",
+    "model": "XS-FB1630",
+    "specs": {
+      "size": "6.5",
+      "type": "coaxial",
+      "frequency_response": "35-24000",
+      "impedance": 4,
+      "rms": 45,
+      "peak": 260
+    },
+    "price_inr": 2499,
+    "amazon_link": "https://www.amazon.in/Sony-XS-FB1630",
+    "flipkart_link": "https://www.flipkart.com/sony-xs-fb1630"
+  },
+  {
+    "category": "speaker",
+    "brand": "JBL",
+    "model": "GT7-6",
+    "specs": {
+      "size": "6.5",
+      "type": "component",
+      "frequency_response": "50-21000",
+      "impedance": 4,
+      "rms": 90,
+      "peak": 270
+    },
+    "price_inr": 8999,
+    "amazon_link": "https://www.amazon.in/JBL-GT7-6",
+    "flipkart_link": "https://www.flipkart.com/jbl-gt7-6"
+  },
+  {
+    "category": "speaker",
+    "brand": "Hertz",
+    "model": "DCX 165.3",
+    "specs": {
+      "size": "6.5",
+      "type": "component",
+      "frequency_response": "55-23000",
+      "impedance": 4,
+      "rms": 100,
+      "peak": 200
+    },
+    "price_inr": 15999,
+    "amazon_link": "https://www.amazon.in/Hertz-DCX-165-3",
+    "flipkart_link": null
+  },
+  {
+    "category": "speaker",
+    "brand": "Focal",
+    "model": "165 AC",
+    "specs": {
+      "size": "6.5",
+      "type": "coaxial",
+      "frequency_response": "60-20000",
+      "impedance": 4,
+      "rms": 60,
+      "peak": 120
+    },
+    "price_inr": 7999,
+    "amazon_link": "https://www.amazon.in/Focal-165-AC",
+    "flipkart_link": null
+  },
+  {
+    "category": "subwoofer",
+    "brand": "Pioneer",
+    "model": "TS-W311S4",
+    "specs": {
+      "size": "12",
+      "type": "SVC",
+      "impedance": 4,
+      "rms": 400,
+      "peak": 1400,
+      "frequency_response": "20-125",
+      "recommended_enclosure": "sealed 0.7-1.1 cu.ft, ported 1.4-1.9 cu.ft"
+    },
+    "price_inr": 8999,
+    "amazon_link": "https://www.amazon.in/Pioneer-TS-W311S4",
+    "flipkart_link": "https://www.flipkart.com/pioneer-ts-w311s4"
+  },
+  {
+    "category": "subwoofer",
+    "brand": "Sony",
+    "model": "XS-GTX121LC",
+    "specs": {
+      "size": "12",
+      "type": "DVC",
+      "impedance": 4,
+      "rms": 350,
+      "peak": 1800,
+      "frequency_response": "25-200",
+      "recommended_enclosure": "sealed 0.6-1.0 cu.ft, ported 1.2-2.0 cu.ft"
+    },
+    "price_inr": 12999,
+    "amazon_link": "https://www.amazon.in/Sony-XS-GTX121LC",
+    "flipkart_link": "https://www.flipkart.com/sony-xs-gtx121lc"
+  },
+  {
+    "category": "subwoofer",
+    "brand": "JBL",
+    "model": "GT-BassPro12",
+    "specs": {
+      "size": "12",
+      "type": "Powered",
+      "impedance": 4,
+      "rms": 450,
+      "peak": 450,
+      "frequency_response": "28-150",
+      "recommended_enclosure": "Built-in enclosure"
+    },
+    "price_inr": 19999,
+    "amazon_link": "https://www.amazon.in/JBL-GT-BassPro12",
+    "flipkart_link": "https://www.flipkart.com/jbl-gt-basspro12"
+  },
+  {
+    "category": "subwoofer",
+    "brand": "Rockford Fosgate",
+    "model": "P3D4-12",
+    "specs": {
+      "size": "12",
+      "type": "DVC",
+      "impedance": 4,
+      "rms": 600,
+      "peak": 1200,
+      "frequency_response": "28-250",
+      "recommended_enclosure": "sealed 1.25 cu.ft, ported 2.0 cu.ft"
+    },
+    "price_inr": 24999,
+    "amazon_link": "https://www.amazon.in/Rockford-Fosgate-P3D4-12",
+    "flipkart_link": null
+  },
+  {
+    "category": "subwoofer",
+    "brand": "Hertz",
+    "model": "HX 300 D",
+    "specs": {
+      "size": "12",
+      "type": "DVC",
+      "impedance": 4,
+      "rms": 750,
+      "peak": 1500,
+      "frequency_response": "25-500",
+      "recommended_enclosure": "sealed 1.0-1.4 cu.ft, ported 1.8-2.8 cu.ft"
+    },
+    "price_inr": 32999,
+    "amazon_link": "https://www.amazon.in/Hertz-HX-300-D",
+    "flipkart_link": null
+  },
+  {
+    "category": "head_unit",
+    "brand": "Nakamichi",
+    "model": "NAM5510",
+    "specs": {
+      "display_size": "9/10.1 inch",
+      "preout_voltage": 2.0,
+      "rca_channels": 6,
+      "rca_outputs": ["Front", "Rear", "Subwoofer"],
+      "eq_type": "Graphic EQ",
+      "eq_bands_count": 14,
+      "eq_frequencies_hz": [32, 63, 100, 200, 400, 630, 1000, 2000, 4000, 8000, 10000, 12000, 14000, 16000],
+      "eq_gain_range_db": [-12, 12]
+    },
+    "price_inr": 18500,
+    "amazon_link": "https://www.amazon.in/Nakamichi-NAM5510",
+    "flipkart_link": null
+  },
+  {
+    "category": "amplifier",
+    "brand": "MOCO",
+    "model": "AF-04",
+    "specs": {
+      "channels": 4,
+      "class": "AB",
+      "rms_per_channel_4ohm": 60,
+      "rms_per_channel_2ohm": 90,
+      "bridged_rms_4ohm": 180,
+      "frequency_response": "20-20000",
+      "crossover": "HPF / LPF / Full Switchable (50Hz - 250Hz)",
+      "input_sensitivity_v": "0.2V - 6.0V"
+    },
+    "price_inr": 6999,
+    "amazon_link": null,
+    "flipkart_link": null
+  },
+  {
+    "category": "amplifier",
+    "brand": "Sound Barrier",
+    "model": "SB-654",
+    "specs": {
+      "channels": 4,
+      "class": "MOSFET AB",
+      "rms_per_channel_4ohm": 75,
+      "bridged_mono_rms_4ohm": 250,
+      "frequency_response": "10-30000",
+      "crossover": "Variable LPF 50-250Hz / HPF 120-3000Hz",
+      "bass_boost_db": "0-12dB @ 50Hz",
+      "input_sensitivity_v": "0.2V - 5.0V"
+    },
+    "price_inr": 7499,
+    "amazon_link": null,
+    "flipkart_link": null
+  },
+  {
+    "category": "speaker",
+    "brand": "Sony",
+    "model": "XS-162GS Component",
+    "specs": {
+      "size": "6.5",
+      "type": "2-way component (separate tweeter + woofer)",
+      "impedance": 4,
+      "rms": 45,
+      "peak": 250,
+      "sensitivity_db": 90,
+      "frequency_response": "45-24000",
+      "recommended_hpf_hz": 80
+    },
+    "price_inr": 4990,
+    "amazon_link": "https://www.amazon.in/Sony-XS-162GS",
+    "flipkart_link": null
+  },
+  {
+    "category": "speaker",
+    "brand": "Sony",
+    "model": "XS-162GS Coaxial",
+    "specs": {
+      "size": "6.5",
+      "type": "2-way coaxial",
+      "impedance": 4,
+      "rms": 45,
+      "peak": 250,
+      "sensitivity_db": 89,
+      "frequency_response": "45-24000",
+      "recommended_hpf_hz": 90
+    },
+    "price_inr": 3490,
+    "amazon_link": null,
+    "flipkart_link": null
+  },
+  {
+    "category": "subwoofer",
+    "brand": "Pioneer",
+    "model": "TS-W307D4 (Custom 35Hz Ported)",
+    "specs": {
+      "size": "12",
+      "type": "Dual Voice Coil (DVC)",
+      "coil_impedance": "Dual 4 ohm (wired series to 8 ohm or parallel to 2 ohm)",
+      "rms": 400,
+      "peak": 1200,
+      "sensitivity_db": 89,
+      "frequency_response": "18-500",
+      "enclosure_type": "Custom Ported Box",
+      "enclosure_volume_cu_ft": 2.0,
+      "tuning_frequency_hz": 35,
+      "slot_port_dimensions": "12 x 2.5 x 14 inches",
+      "recommended_subsonic_hz": 28,
+      "recommended_lpf_hz": 80
+    },
+    "price_inr": 8990,
+    "amazon_link": "https://www.amazon.in/Pioneer-TS-W307D4",
+    "flipkart_link": null
+  }
+]

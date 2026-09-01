@@ -268,7 +268,8 @@ eas build --platform android
 This is a private project currently in development. For questions or collaboration:
 
 **Developer**: Aditya  
-**Contact**: [Your contact info]
+**Contact**: adityashm09@gmail.com
+
 
 ## 📄 License
 

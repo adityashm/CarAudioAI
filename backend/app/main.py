@@ -49,11 +49,14 @@ async def health_check():
         "environment": settings.ENVIRONMENT
     }
 
-# Import and include active routers
-from app.routers import cars, equipment, tuning
+# Import and include all active routers
+from app.routers import cars, equipment, tuning, auth, payments, measurements
+app.include_router(auth.router, prefix="/api/auth", tags=["Authentication"])
 app.include_router(cars.router, prefix="/api/cars", tags=["Cars"])
 app.include_router(equipment.router, prefix="/api/equipment", tags=["Equipment"])
 app.include_router(tuning.router, prefix="/api/tuning", tags=["Tuning"])
+app.include_router(payments.router, prefix="/api/payments", tags=["Payments"])
+app.include_router(measurements.router, prefix="/api/measurements", tags=["Measurements"])
 
 if __name__ == "__main__":
     import uvicorn

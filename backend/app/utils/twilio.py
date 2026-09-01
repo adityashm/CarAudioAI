@@ -9,9 +9,11 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-# Initialize Twilio client
-twilio_client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
-
+def get_twilio_client():
+    """Get Twilio client if configured"""
+    if settings.TWILIO_ACCOUNT_SID and settings.TWILIO_AUTH_TOKEN:
+        return Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
+    return None
 
 async def send_otp(phone_number: str) -> dict:
     """
@@ -24,8 +26,11 @@ async def send_otp(phone_number: str) -> dict:
         dict: {"success": bool, "message": str, "sid": str}
     """
     try:
-        # Twilio Verify automatically generates and sends OTP
-        verification = twilio_client.verify.v2.services(
+        client = get_twilio_client()
+        if not client or not settings.TWILIO_VERIFY_SERVICE_SID:
+            return {"success": False, "message": "Twilio credentials not configured"}
+
+        verification = client.verify.v2.services(
             settings.TWILIO_VERIFY_SERVICE_SID
         ).verifications.create(
             to=phone_number,
@@ -70,7 +75,11 @@ async def verify_otp(phone_number: str, otp_code: str) -> dict:
         dict: {"success": bool, "message": str, "verified": bool}
     """
     try:
-        verification_check = twilio_client.verify.v2.services(
+        client = get_twilio_client()
+        if not client or not settings.TWILIO_VERIFY_SERVICE_SID:
+            return {"success": False, "message": "Twilio credentials not configured", "verified": False}
+
+        verification_check = client.verify.v2.services(
             settings.TWILIO_VERIFY_SERVICE_SID
         ).verification_checks.create(
             to=phone_number,

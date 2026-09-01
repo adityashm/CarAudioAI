@@ -10,14 +10,17 @@ from typing import Optional
 
 logger = logging.getLogger(__name__)
 
-# Initialize DigitalOcean Spaces client (S3-compatible)
-spaces_client = boto3.client(
-    's3',
-    region_name=settings.SPACES_REGION,
-    endpoint_url=settings.SPACES_ENDPOINT,
-    aws_access_key_id=settings.SPACES_KEY,
-    aws_secret_access_key=settings.SPACES_SECRET
-)
+def get_spaces_client():
+    """Get DigitalOcean Spaces client if credentials are configured"""
+    if settings.SPACES_KEY and settings.SPACES_SECRET:
+        return boto3.client(
+            's3',
+            region_name=settings.SPACES_REGION,
+            endpoint_url=settings.SPACES_ENDPOINT,
+            aws_access_key_id=settings.SPACES_KEY,
+            aws_secret_access_key=settings.SPACES_SECRET
+        )
+    return None
 
 
 async def upload_file(

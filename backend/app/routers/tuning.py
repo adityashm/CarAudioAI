@@ -88,7 +88,19 @@ async def calculate_tuning(req: TuningCalculationRequest):
         sub_impedance_ohms=8.0
     )
     
-    # 6. Assemble Comprehensive Quick Action Checklist
+    # 6. Generate DSP Export Previews
+    tuning_dict = {
+        "car": f"{req.car_make} {req.car_model}",
+        "sound_target": req.sound_target_profile,
+        "head_unit_14_band_eq": eq_profile,
+        "crossover_configuration": crossover_profile,
+        "time_alignment_and_phase": ta_profile
+    }
+    from app.algorithms.dsp_export import export_pioneer_xml, export_minidsp_json
+    pioneer_xml = export_pioneer_xml(tuning_dict)
+    minidsp_json = export_minidsp_json(tuning_dict)
+    
+    # 7. Assemble Comprehensive Quick Action Checklist
     quick_checklist = [
         "1. [AMP 1 - MOCO AF-04]: Flip Front CH1/2 Crossover switch to HPF, turn frequency knob to ~80Hz (approx. 9:30 o'clock).",
         "2. [AMP 1 - MOCO AF-04]: Flip Rear CH3/4 Crossover switch to HPF, turn frequency knob to ~90Hz (approx. 10:00 o'clock).",
@@ -113,5 +125,7 @@ async def calculate_tuning(req: TuningCalculationRequest):
         crossover_configuration=crossover_profile,
         time_alignment_and_phase=ta_profile,
         amplifier_gain_and_dial_settings=gain_profile,
-        quick_action_checklist=quick_checklist
+        quick_action_checklist=quick_checklist,
+        pioneer_xml_preview=pioneer_xml,
+        minidsp_json_preview=minidsp_json
     )

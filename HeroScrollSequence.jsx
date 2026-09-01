@@ -1,10 +1,10 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { Platform, StyleSheet, View, Text, Image } from 'react-native';
 import { motion, useScroll, useTransform, AnimatePresence, useReducedMotion } from 'framer-motion';
-import { tokens } from '@/design-system/tokens';
-import { InstrumentPanel } from '@/components/ui/InstrumentPanel';
-import { Button } from '@/components/ui/Button';
-import { Readout } from '@/components/ui/Readout';
+import { tokens } from '../design-system/tokens';
+import { InstrumentPanel } from './ui/InstrumentPanel';
+import { Button } from './ui/Button';
+import { Readout } from './ui/Readout';
 
 // 8K Photorealistic Storyboard Shots
 const SHOT_IMAGES = [

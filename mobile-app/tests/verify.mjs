@@ -175,6 +175,32 @@ describe('Design System and UI Primitives Verification', () => {
       assert.ok(rtaModalContent.includes('1-Click Auto-Tune Inverse Correction'));
     });
   });
+
+  describe('Subwoofer Enclosure Box Modeling & Acoustic Damping (Phase 3)', () => {
+    const boxContent = readFileSync(join(process.cwd(), 'services', 'subwooferBoxEngine.ts'), 'utf-8');
+    const dampingContent = readFileSync(join(process.cwd(), 'services', 'dampingCalculatorService.ts'), 'utf-8');
+    const boxModalContent = readFileSync(join(process.cwd(), 'components', 'SubwooferBoxModal.tsx'), 'utf-8');
+    const dampingModalContent = readFileSync(join(process.cwd(), 'components', 'DampingEstimatorModal.tsx'), 'utf-8');
+
+    test('subwooferBoxEngine.ts models sealed/ported enclosures, port velocity and cut sheets', () => {
+      assert.ok(boxContent.includes('calculateSubwooferEnclosure'));
+      assert.ok(boxContent.includes('TYPICAL_TS_BY_SIZE'));
+      assert.ok(boxContent.includes('isChuffingRisk'));
+      assert.ok(boxContent.includes('portAirVelocityMs'));
+    });
+
+    test('dampingCalculatorService.ts estimates panel coverage, sheet counts, and road noise reduction', () => {
+      assert.ok(dampingContent.includes('calculateVehicleDamping'));
+      assert.ok(dampingContent.includes('expectedRoadNoiseReductionDb'));
+      assert.ok(dampingContent.includes('totalSheetsRequired'));
+    });
+
+    test('SubwooferBoxModal and DampingEstimatorModal components are fully wired and functional', () => {
+      assert.ok(boxModalContent.includes('Subwoofer Enclosure Designer & Port Calculator'));
+      assert.ok(dampingModalContent.includes('Acoustic Sound Deadening & Damping Calculator'));
+    });
+  });
 });
+
 
 

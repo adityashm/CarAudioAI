@@ -16,6 +16,8 @@ import HeroScrollSequence from '@/components/HeroScrollSequence';
 import AuthModal from '@/components/AuthModal';
 import PaymentModal from '@/components/PaymentModal';
 import RtaMeasurementModal from '@/components/RtaMeasurementModal';
+import SubwooferBoxModal from '@/components/SubwooferBoxModal';
+import DampingEstimatorModal from '@/components/DampingEstimatorModal';
 import { UserProfile, getCurrentUser } from '@/services/authService';
 import {
   downloadPioneerXml,
@@ -66,6 +68,8 @@ export default function AppMainScreen() {
   const [authModalVisible, setAuthModalVisible] = useState(false);
   const [paymentModalVisible, setPaymentModalVisible] = useState(false);
   const [rtaModalVisible, setRtaModalVisible] = useState(false);
+  const [boxModalVisible, setBoxModalVisible] = useState(false);
+  const [dampingModalVisible, setDampingModalVisible] = useState(false);
   const [xmlCopied, setXmlCopied] = useState(false);
   const [jsonCopied, setJsonCopied] = useState(false);
   const [exportFeedback, setExportFeedback] = useState<string | null>(null);
@@ -1282,6 +1286,33 @@ export default function AppMainScreen() {
                         <Text style={styles.filterDesc}>Bass Boost: MUST BE SET TO 0 dB (OFF).</Text>
                       </View>
                     )}
+
+                    {/* Pro Hardware Tool Launchers */}
+                    <View style={styles.hardwareToolsRow}>
+                      <TouchableOpacity
+                        style={styles.hardwareToolBtn}
+                        onPress={() => setBoxModalVisible(true)}
+                      >
+                        <Text style={styles.hardwareToolIcon}>📦</Text>
+                        <View style={styles.hardwareToolInfo}>
+                          <Text style={styles.hardwareToolTitle}>Subwoofer Box Designer & Port Calculator</Text>
+                          <Text style={styles.hardwareToolSub}>Thiele-Small modeling, port air velocity & cut sheet</Text>
+                        </View>
+                        <Text style={styles.hardwareToolArrow}>→</Text>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        style={styles.hardwareToolBtn}
+                        onPress={() => setDampingModalVisible(true)}
+                      >
+                        <Text style={styles.hardwareToolIcon}>🛡️</Text>
+                        <View style={styles.hardwareToolInfo}>
+                          <Text style={styles.hardwareToolTitle}>Acoustic Damping & Sound Deadening Plan</Text>
+                          <Text style={styles.hardwareToolSub}>Vehicle panel square footage, sheets & noise reduction</Text>
+                        </View>
+                        <Text style={styles.hardwareToolArrow}>→</Text>
+                      </TouchableOpacity>
+                    </View>
                   </View>
                 )}
 
@@ -1674,6 +1705,20 @@ export default function AppMainScreen() {
           });
           setStudioTab('eq');
         }}
+      />
+
+      <SubwooferBoxModal
+        visible={boxModalVisible}
+        onClose={() => setBoxModalVisible(false)}
+        subwooferName={selectedSubwoofer.name}
+        initialSizeInches={selectedSubwoofer.size.includes('10') ? 10 : (selectedSubwoofer.size.includes('15') ? 15 : 12)}
+      />
+
+      <DampingEstimatorModal
+        visible={dampingModalVisible}
+        onClose={() => setDampingModalVisible(false)}
+        carName={`${selectedMake.name} ${selectedCar.model}`}
+        category={selectedCar.category}
       />
     </SafeAreaView>
   );
@@ -2656,6 +2701,41 @@ const styles = StyleSheet.create({
     padding: 8,
     borderRadius: 6,
     marginVertical: 6
+  },
+  hardwareToolsRow: {
+    marginTop: 14,
+    gap: 10,
+  },
+  hardwareToolBtn: {
+    backgroundColor: '#0c1322',
+    borderWidth: 1,
+    borderColor: '#1e3a5f',
+    borderRadius: 12,
+    padding: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  hardwareToolIcon: {
+    fontSize: 22,
+  },
+  hardwareToolInfo: {
+    flex: 1,
+  },
+  hardwareToolTitle: {
+    color: '#38bdf8',
+    fontSize: 13,
+    fontWeight: 'bold',
+    marginBottom: 2,
+  },
+  hardwareToolSub: {
+    color: '#94a3b8',
+    fontSize: 11,
+  },
+  hardwareToolArrow: {
+    color: '#38bdf8',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
   voltageGrid: {
     flexDirection: 'row',

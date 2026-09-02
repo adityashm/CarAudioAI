@@ -1064,15 +1064,19 @@ export default function AppMainScreen() {
                 <View style={styles.glassCard}>
                   <View style={styles.cardHeaderFlex}>
                     <View>
+                      <View style={styles.tuningActiveBadge}>
+                        <View style={styles.tuningActiveDot} />
+                        <Text style={styles.tuningActiveText}>ACOUSTIC CALIBRATION ENGINE</Text>
+                      </View>
                       <Text style={styles.cardTitle}>
-                        🚗 Calibrating: <Text style={styles.textWhite}>{selectedMake.name} {selectedCar.model}</Text>
+                        Calibrating: <Text style={styles.textWhite}>{selectedMake.name} {selectedCar.model}</Text>
                       </Text>
                       <Text style={styles.cardSubNote}>
-                        Gear: {selectedHeadUnit.name.split('(')[0]} • {selectedFrontSpeaker.name.split('(')[0]} • {selectedSubwoofer.name.split('(')[0]}
+                        Active Gear: {selectedHeadUnit.name.split('(')[0]} • {selectedFrontSpeaker.name.split('(')[0]} • {selectedSubwoofer.name.split('(')[0]}
                       </Text>
                     </View>
                     <TouchableOpacity style={styles.outlinePillBtn} onPress={() => setWizardStep(3)}>
-                      <Text style={styles.outlinePillBtnText}>Edit Gear ⚙️</Text>
+                      <Text style={styles.outlinePillBtnText}>Edit Hardware Specs</Text>
                     </TouchableOpacity>
                   </View>
 
@@ -1080,9 +1084,9 @@ export default function AppMainScreen() {
                   <Text style={styles.subConfigLabel}>Target Sound Signature:</Text>
                   <View style={styles.targetRow}>
                     {[
-                      { id: 'sql', label: '🔥 SQL (Punjabi/EDM/Hip-Hop)', desc: 'High impact sub-bass + crisp transparent vocals' },
-                      { id: 'harman', label: '🎵 Harman Reference', desc: 'Linear in-cabin acoustic balance' },
-                      { id: 'vocal', label: '🎙️ Vocal Clarity', desc: 'Enhanced intelligibility for podcasts & acoustic' }
+                      { id: 'sql', label: 'SQL Bass Focus (EDM / Hip-Hop)', desc: 'High impact sub-bass + crisp transparent vocals' },
+                      { id: 'harman', label: 'Harman Target (Audiophile Reference)', desc: 'Linear in-cabin acoustic balance' },
+                      { id: 'vocal', label: 'Vocal Clarity (Acoustic & Podcasts)', desc: 'Enhanced intelligibility for podcasts & acoustic' }
                     ].map((item) => (
                       <TouchableOpacity
                         key={item.id}
@@ -1099,12 +1103,12 @@ export default function AppMainScreen() {
                 {/* STUDIO TOOLS NAVIGATION */}
                 <View style={styles.toolNavStrip}>
                   {[
-                    { id: 'simulation', label: '🌊 Live Soundfield' },
-                    { id: 'eq', label: '🎚️ Bezier EQ Curve' },
-                    { id: 'crossover', label: '🎛️ Crossovers & Dials' },
-                    { id: 'gain', label: '⚡ Multimeter Voltages' },
-                    { id: 'tones', label: '🔊 Tone Generator' },
-                    { id: 'export', label: '📤 DSP File Exporter' }
+                    { id: 'simulation', label: 'Soundfield Simulation' },
+                    { id: 'eq', label: 'Parametric Spline EQ' },
+                    { id: 'crossover', label: 'Crossovers & Filters' },
+                    { id: 'gain', label: 'Gain Staging (DMM)' },
+                    { id: 'tones', label: 'Test Tone Synth' },
+                    { id: 'export', label: 'DSP File Export' }
                   ].map((tab) => (
                     <TouchableOpacity
                       key={tab.id}
@@ -1120,7 +1124,7 @@ export default function AppMainScreen() {
                 {studioTab === 'simulation' && (
                   <View style={styles.glassCard}>
                     <View style={styles.cardHeaderFlex}>
-                      <Text style={styles.cardTitle}>🌊 In-Cabin Acoustic Propagation Simulator</Text>
+                      <Text style={styles.cardTitle}>In-Cabin Acoustic Propagation Simulator</Text>
                       <TouchableOpacity
                         style={[styles.toggleBtn, timeAlignmentEnabled && styles.toggleBtnActive]}
                         onPress={() => setTimeAlignmentEnabled(!timeAlignmentEnabled)}
@@ -1131,7 +1135,7 @@ export default function AppMainScreen() {
                       </TouchableOpacity>
                     </View>
                     <Text style={styles.cardSubNote}>
-                      Live wave rendering inside {selectedMake.name} {selectedCar.model} cabin ({selectedCar.cabinVolumeM3} m³).
+                      Real-time 60 FPS wave convergence rendering inside {selectedMake.name} {selectedCar.model} cabin ({selectedCar.cabinVolumeM3} m³).
                     </Text>
 
                     {Platform.OS === 'web' && (
@@ -1174,9 +1178,9 @@ export default function AppMainScreen() {
                 {/* TAB 2: BEZIER EQUALIZER CURVE */}
                 {studioTab === 'eq' && (
                   <View style={styles.glassCard}>
-                    <Text style={styles.cardTitle}>🎚️ 14-Band Parametric Spline Equalizer</Text>
+                    <Text style={styles.cardTitle}>14-Band Parametric Spline Equalizer</Text>
                     <Text style={styles.cardSubNote}>
-                      Continuous mathematical curve matching {selectedHeadUnit.name}:
+                      Continuous mathematical Bezier curve matching {selectedHeadUnit.name}:
                     </Text>
 
                     {Platform.OS === 'web' && (
@@ -1240,7 +1244,7 @@ export default function AppMainScreen() {
                 {/* TAB 3: CROSSOVERS & DIALS */}
                 {studioTab === 'crossover' && (
                   <View style={styles.glassCard}>
-                    <Text style={styles.cardTitle}>🎛️ Physical Amplifier Filter Dials & Crossovers</Text>
+                    <Text style={styles.cardTitle}>Physical Amplifier Filter Dials & Crossovers</Text>
 
                     <View style={styles.filterCard}>
                       <Text style={styles.filterCardHead}>Front Channels ({selectedFrontSpeaker.name})</Text>
@@ -1263,7 +1267,7 @@ export default function AppMainScreen() {
                         <Text style={styles.filterValueMono}>Subsonic Filter: ~{subsonicHz} Hz</Text>
                         {selectedSubwoofer.type === 'ported' && (
                           <Text style={styles.subsonicWarning}>
-                            ⚠️ PORTED BOX SAFETY: Frequencies below {selectedSubwoofer.tuneHz}Hz cause mechanical cone unloading. The {subsonicHz}Hz subsonic cutoff protects voice coils from burning.
+                            PORTED BOX SAFETY: Frequencies below {selectedSubwoofer.tuneHz}Hz cause mechanical cone unloading. The {subsonicHz}Hz subsonic cutoff protects voice coils from burning.
                           </Text>
                         )}
                         <Text style={styles.filterDesc}>Bass Boost: MUST BE SET TO 0 dB (OFF).</Text>
@@ -1275,7 +1279,7 @@ export default function AppMainScreen() {
                 {/* TAB 4: MULTIMETER VOLTAGES */}
                 {studioTab === 'gain' && (
                   <View style={styles.glassCard}>
-                    <Text style={styles.cardTitle}>⚡ Multimeter Target AC Voltages (V = √(P × R))</Text>
+                    <Text style={styles.cardTitle}>Multimeter Target AC Voltages (V = √(P × R))</Text>
                     <Text style={styles.cardSubNote}>
                       Set {selectedHeadUnit.name.split('(')[0]} volume to 75% with flat EQ before measuring amplifier speaker terminals:
                     </Text>
@@ -1312,7 +1316,7 @@ export default function AppMainScreen() {
                 {/* TAB 5: AUDIO TONE GENERATOR */}
                 {studioTab === 'tones' && (
                   <View style={styles.glassCard}>
-                    <Text style={styles.cardTitle}>🔊 In-Browser Audio Test Tone Generator</Text>
+                    <Text style={styles.cardTitle}>In-Browser Audio Test Tone Synthesizer</Text>
                     <Text style={styles.cardSubNote}>
                       Connect via Bluetooth/Aux to play precision calibration tones in your car:
                     </Text>
@@ -1324,7 +1328,7 @@ export default function AppMainScreen() {
                       >
                         <Text style={styles.toneCardTitle}>1,000 Hz (1 kHz) Sine Wave (0 dB)</Text>
                         <Text style={styles.toneCardSub}>Used for measuring Front/Rear speaker amplifier AC voltage ({vFront}V)</Text>
-                        <Text style={styles.toneCardStatusMono}>{isPlayingTone === '1000' ? '⏹️ STOPPING' : '▶️ PLAY 1 kHz'}</Text>
+                        <Text style={styles.toneCardStatusMono}>{isPlayingTone === '1000' ? 'STOPPING' : 'PLAY 1 kHz'}</Text>
                       </TouchableOpacity>
 
                       <TouchableOpacity
@@ -1333,7 +1337,7 @@ export default function AppMainScreen() {
                       >
                         <Text style={styles.toneCardTitle}>50 Hz Sine Wave (0 dB)</Text>
                         <Text style={styles.toneCardSub}>Used for measuring Subwoofer amplifier AC voltage ({vSub}V)</Text>
-                        <Text style={styles.toneCardStatusMono}>{isPlayingTone === '50' ? '⏹️ STOPPING' : '▶️ PLAY 50 Hz'}</Text>
+                        <Text style={styles.toneCardStatusMono}>{isPlayingTone === '50' ? 'STOPPING' : 'PLAY 50 Hz'}</Text>
                       </TouchableOpacity>
 
                       <TouchableOpacity
@@ -1342,13 +1346,13 @@ export default function AppMainScreen() {
                       >
                         <Text style={styles.toneCardTitle}>Pink Noise (20 Hz – 20 kHz)</Text>
                         <Text style={styles.toneCardSub}>Full-spectrum acoustic test tone for RTA microphone measurement</Text>
-                        <Text style={styles.toneCardStatusMono}>{isPlayingTone === 'pink' ? '⏹️ STOPPING' : '▶️ PLAY NOISE'}</Text>
+                        <Text style={styles.toneCardStatusMono}>{isPlayingTone === 'pink' ? 'STOPPING' : 'PLAY NOISE'}</Text>
                       </TouchableOpacity>
                     </View>
 
                     {isPlayingTone && (
                       <TouchableOpacity style={styles.stopGlobalBtn} onPress={stopTone}>
-                        <Text style={styles.stopGlobalBtnText}>⏹️ STOP ALL AUDIO PLAYBACK</Text>
+                        <Text style={styles.stopGlobalBtnText}>STOP ALL AUDIO PLAYBACK</Text>
                       </TouchableOpacity>
                     )}
                   </View>
@@ -1357,7 +1361,7 @@ export default function AppMainScreen() {
                 {/* TAB 6: DSP FILE EXPORT */}
                 {studioTab === 'export' && (
                   <View style={styles.glassCard}>
-                    <Text style={styles.cardTitle}>📤 Export Ready-to-Flash DSP Configurations</Text>
+                    <Text style={styles.cardTitle}>Export Ready-to-Flash DSP Configurations</Text>
 
                     <View style={styles.codeExportCard}>
                       <Text style={styles.codeExportTitle}>Pioneer DEH-80PRS XML Format</Text>
@@ -1846,9 +1850,35 @@ const styles = StyleSheet.create({
     letterSpacing: -0.3
   },
   cardSubNote: {
-    color: '#8b949e',
+    color: '#94a3b8',
     fontSize: 12,
     marginTop: 4
+  },
+  tuningActiveBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#0f172a',
+    borderWidth: 1,
+    borderColor: '#1e293b',
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 9999,
+    alignSelf: 'flex-start',
+    marginBottom: 8,
+  },
+  tuningActiveDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#22d3ee',
+  },
+  tuningActiveText: {
+    color: '#22d3ee',
+    fontSize: 10,
+    fontFamily: 'monospace',
+    fontWeight: 'bold',
+    letterSpacing: 0.8,
   },
   stepTitleRow: {
     flexDirection: 'row',

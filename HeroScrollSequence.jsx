@@ -438,8 +438,8 @@ function WebHeroScrollSequence({ onEnterStudio }) {
         {/* DOM-BASED HUD OVERLAYS WITH AnimatePresence                   */}
         {/* ------------------------------------------------------------- */}
         <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 10, padding: 24, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-          {/* Top HUD Telemetry */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          {/* Top HUD Telemetry & Stage Jump Controller */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pointerEvents: 'auto', flexWrap: 'wrap', gap: 8 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, backgroundColor: '#10141d', padding: '6px 14px', borderRadius: 9999, border: '1px solid #1e2430' }}>
               <div style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: '#22d3ee', boxShadow: '0 0 8px #22d3ee' }} />
               <span style={{ color: '#ffffff', fontFamily: 'monospace', fontSize: 11, fontWeight: 'bold', letterSpacing: 1 }}>
@@ -447,18 +447,38 @@ function WebHeroScrollSequence({ onEnterStudio }) {
               </span>
             </div>
 
-            <div style={{ display: 'flex', gap: 6 }}>
-              {[0, 1, 2, 3].map((step) => (
-                <div
-                  key={step}
-                  style={{
-                    width: 24,
-                    height: 3,
-                    borderRadius: 9999,
-                    backgroundColor: activeStage >= step ? '#ffffff' : 'rgba(255,255,255,0.15)',
-                    transition: 'background-color 0.3s ease',
+            <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+              {[
+                { idx: 0, label: '01 Chassis', p: 0.1 },
+                { idx: 1, label: '02 Ingress', p: 0.4 },
+                { idx: 2, label: '03 Touchscreen', p: 0.7 },
+                { idx: 3, label: '04 Waves', p: 0.95 },
+              ].map((step) => (
+                <button
+                  key={step.idx}
+                  onClick={() => {
+                    initAudioOnGesture();
+                    setActiveStage(step.idx);
+                    if (containerRef.current) {
+                      const top = containerRef.current.offsetTop + (containerRef.current.offsetHeight - window.innerHeight) * step.p;
+                      window.scrollTo({ top, behavior: 'smooth' });
+                    }
                   }}
-                />
+                  style={{
+                    backgroundColor: activeStage === step.idx ? '#ffffff' : 'rgba(255,255,255,0.08)',
+                    color: activeStage === step.idx ? '#050505' : '#8b949e',
+                    border: '1px solid #2a303c',
+                    padding: '5px 10px',
+                    borderRadius: 9999,
+                    fontSize: 10,
+                    fontFamily: 'monospace',
+                    fontWeight: 'bold',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                  }}
+                >
+                  {step.label}
+                </button>
               ))}
             </div>
           </div>

@@ -21,3 +21,7 @@ export type { SliderControlProps, SliderTick } from './SliderControl';
 
 export { DialControl } from './DialControl';
 export type { DialControlProps } from './DialControl';
+
+export { CarBrandLogo } from './CarBrandLogo';
+export type { CarBrandLogoProps } from './CarBrandLogo';
+

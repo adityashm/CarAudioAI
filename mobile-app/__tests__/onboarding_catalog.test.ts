@@ -13,12 +13,12 @@ describe('Vehicle Onboarding & Acoustic Dimensions Catalog (F10)', () => {
   // =========================================================================
   // 1. INDIAN VEHICLE MAKES CATALOG MATRIX
   // =========================================================================
-  describe('Indian Car Manufacturers (9+ Makes)', () => {
-    test('contains at least 9 Indian market vehicle manufacturers', () => {
-      expect(INDIAN_CAR_MAKES.length).toBeGreaterThanOrEqual(9);
+  describe('Indian Car Manufacturers (25+ Makes)', () => {
+    test('contains at least 25 Indian market vehicle manufacturers', () => {
+      expect(INDIAN_CAR_MAKES.length).toBeGreaterThanOrEqual(25);
     });
 
-    test('includes all key Indian market brands: Skoda, Maruti, Hyundai, Tata, Mahindra, Toyota, Kia, VW, Honda', () => {
+    test('includes all key Indian market brands including mass-market, SUV, luxury, and EV makes', () => {
       const makeIds = INDIAN_CAR_MAKES.map((m) => m.id);
       expect(makeIds).toContain('skoda');
       expect(makeIds).toContain('maruti');
@@ -29,6 +29,22 @@ describe('Vehicle Onboarding & Acoustic Dimensions Catalog (F10)', () => {
       expect(makeIds).toContain('kia');
       expect(makeIds).toContain('vw');
       expect(makeIds).toContain('honda');
+      expect(makeIds).toContain('mg');
+      expect(makeIds).toContain('renault');
+      expect(makeIds).toContain('nissan');
+      expect(makeIds).toContain('jeep');
+      expect(makeIds).toContain('bmw');
+      expect(makeIds).toContain('mercedes');
+      expect(makeIds).toContain('audi');
+      expect(makeIds).toContain('volvo');
+      expect(makeIds).toContain('byd');
+      expect(makeIds).toContain('landrover');
+      expect(makeIds).toContain('porsche');
+      expect(makeIds).toContain('ford');
+      expect(makeIds).toContain('citroen');
+      expect(makeIds).toContain('force');
+      expect(makeIds).toContain('lexus');
+      expect(makeIds).toContain('jaguar');
     });
 
     test('each manufacturer has valid metadata (id, name, country, badgeColor, non-empty models)', () => {

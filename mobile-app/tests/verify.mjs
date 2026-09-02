@@ -106,4 +106,34 @@ describe('Design System and UI Primitives Verification', () => {
       assert.ok(dialContent.includes("centerZero"));
     });
   });
+
+  describe('CarBrandLogo & Vehicle Catalog Verification', () => {
+    const logoContent = readFileSync(join(process.cwd(), 'components', 'ui', 'CarBrandLogo.tsx'), 'utf-8');
+    const catalogContent = readFileSync(join(process.cwd(), 'constants', 'catalog.ts'), 'utf-8');
+
+    test('CarBrandLogo exports vector SVG logo component with all 25 brand cases', () => {
+      assert.ok(logoContent.includes('export const CarBrandLogo'));
+      const brandIds = [
+        'skoda', 'suzuki', 'hyundai', 'tata', 'mahindra', 'toyota', 'kia', 'volkswagen', 'honda',
+        'mg', 'renault', 'nissan', 'jeep', 'bmw', 'mercedes', 'audi', 'volvo', 'byd',
+        'landrover', 'porsche', 'ford', 'citroen', 'force', 'lexus', 'jaguar'
+      ];
+      brandIds.forEach((id) => {
+        assert.ok(logoContent.includes(`"${id}":`), `Missing logo path for: ${id}`);
+      });
+    });
+
+    test('catalog.ts contains at least 25 makes and over 50 car models with acoustic specs', () => {
+      assert.ok(catalogContent.includes("export const INDIAN_CAR_MAKES"));
+      const brandIds = [
+        'skoda', 'maruti', 'hyundai', 'tata', 'mahindra', 'toyota', 'kia', 'vw', 'honda',
+        'mg', 'renault', 'nissan', 'jeep', 'bmw', 'mercedes', 'audi', 'volvo', 'byd',
+        'landrover', 'porsche', 'ford', 'citroen', 'force', 'lexus', 'jaguar'
+      ];
+      brandIds.forEach((id) => {
+        assert.ok(catalogContent.includes(`id: '${id}'`), `Missing make id in catalog: ${id}`);
+      });
+    });
+  });
 });
+

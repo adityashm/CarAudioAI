@@ -30,9 +30,20 @@ import {
   REAR_SPEAKER_OPTIONS,
   AMPLIFIER_OPTIONS,
   SUBWOOFER_OPTIONS,
+  HEAD_UNIT_BRANDS,
+  FRONT_SPEAKER_BRANDS,
+  REAR_SPEAKER_BRANDS,
+  AMPLIFIER_BRANDS,
+  SUBWOOFER_BRANDS,
   CarModelData,
-  VehicleMake
+  VehicleMake,
+  HeadUnitItem,
+  SpeakerItem,
+  AmplifierItem,
+  SubwooferItem
 } from '@/constants/catalog';
+import { CarBrandLogo } from '@/components/ui/CarBrandLogo';
+import EquipmentBrandModelSelector from '@/components/configurator/EquipmentBrandModelSelector';
 
 const SPEED_OF_SOUND = 34.3; // cm / ms
 const EQ_FREQUENCIES = [32, 63, 100, 200, 400, 630, 1000, 2000, 4000, 8000, 10000, 12000, 14000, 16000];
@@ -71,6 +82,7 @@ export default function AppMainScreen() {
 
   // Search filter for Make/Model
   const [makeSearch, setMakeSearch] = useState('');
+  const [makeCategoryFilter, setMakeCategoryFilter] = useState<string>('all');
 
   // Target Sound Profile
   const [soundProfile, setSoundProfile] = useState<'sql' | 'harman' | 'vocal'>('sql');
@@ -384,10 +396,18 @@ export default function AppMainScreen() {
     });
   };
 
-  const filteredMakes = INDIAN_CAR_MAKES.filter((m) =>
-    m.name.toLowerCase().includes(makeSearch.toLowerCase()) ||
-    m.models.some((model) => model.model.toLowerCase().includes(makeSearch.toLowerCase()))
-  );
+  const filteredMakes = INDIAN_CAR_MAKES.filter((m) => {
+    const q = makeSearch.toLowerCase().trim();
+    const matchesSearch =
+      !q ||
+      m.name.toLowerCase().includes(q) ||
+      m.country.toLowerCase().includes(q) ||
+      m.models.some((model) => model.model.toLowerCase().includes(q) || model.category.toLowerCase().includes(q));
+
+    if (!matchesSearch) return false;
+    if (makeCategoryFilter === 'all') return true;
+    return m.categoryTag === makeCategoryFilter;
+  });
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -753,45 +773,136 @@ export default function AppMainScreen() {
             {/* ------------------------------------------------------------- */}
             {/* STEP 1: SELECT VEHICLE MAKE                                   */}
             {/* ------------------------------------------------------------- */}
+            {/* ------------------------------------------------------------- */}
+            {/* STEP 1: SELECT VEHICLE MAKE                                   */}
+            {/* ------------------------------------------------------------- */}
             {wizardStep === 1 && (
               <View style={styles.glassCard}>
                 <View style={styles.cardHeaderFlex}>
                   <View>
-                    <Text style={styles.cardTitle}>Step 01 // Select Manufacturer</Text>
-                    <Text style={styles.cardSubNote}>Select your vehicle manufacturer in India:</Text>
+                    <View style={styles.stepTitleRow}>
+                      <Text style={styles.cardTitle}>Step 01 // Select Manufacturer</Text>
+                      <View style={styles.brandCountBadge}>
+                        <Text style={styles.brandCountBadgeText}>{filteredMakes.length} of {INDIAN_CAR_MAKES.length} BRANDS</Text>
+                      </View>
+                    </View>
+                    <Text style={styles.cardSubNote}>Select your vehicle manufacturer in India for exact acoustic calibration:</Text>
                   </View>
+                </View>
+
+                {/* Make Category Quick Filter Tabs */}
+                <View style={styles.makeCategoryTabs}>
+                  {[
+                    { id: 'all', label: 'All Brands' },
+                    { id: 'popular', label: 'Popular / Mass Market' },
+                    { id: 'suv', label: 'SUV & 4x4' },
+                    { id: 'luxury', label: 'Luxury / German' },
+                    { id: 'ev', label: 'EV Pioneers' },
+                  ].map((tab) => (
+                    <TouchableOpacity
+                      key={tab.id}
+                      style={[
+                        styles.makeCategoryTab,
+                        makeCategoryFilter === tab.id && styles.makeCategoryTabActive,
+                      ]}
+                      onPress={() => setMakeCategoryFilter(tab.id)}
+                    >
+                      <Text
+                        style={[
+                          styles.makeCategoryTabText,
+                          makeCategoryFilter === tab.id && styles.makeCategoryTabTextActive,
+                        ]}
+                      >
+                        {tab.label}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
                 </View>
 
                 {/* Make Search Bar */}
                 <View style={styles.searchBarContainer}>
                   <TextInput
-                    placeholder="Search brand or model (e.g. Skoda, Swift, Creta)..."
+                    placeholder="Search brand or model (e.g. Skoda, Swift, Thar, Creta, Defender, BMW)..."
                     placeholderTextColor="#64748b"
                     value={makeSearch}
                     onChangeText={setMakeSearch}
                     style={styles.searchInput}
                   />
+                  {makeSearch.length > 0 && (
+                    <TouchableOpacity onPress={() => setMakeSearch('')} style={styles.searchClearBtn}>
+                      <Text style={styles.searchClearBtnText}>✕</Text>
+                    </TouchableOpacity>
+                  )}
                 </View>
 
-                {/* Grid of Vehicle Makes */}
+                {/* Grid of Vehicle Makes with Authentic Vector SVG Logos */}
                 <View style={styles.makeGrid}>
                   {filteredMakes.map((make) => {
                     const isSelected = selectedMake.id === make.id;
                     return (
                       <TouchableOpacity
                         key={make.id}
-                        style={[styles.makeCard, isSelected && styles.makeCardActive]}
+                        style={[
+                          styles.makeCard,
+                          isSelected && styles.makeCardActive,
+                          isSelected && { borderColor: make.badgeColor }
+                        ]}
                         onPress={() => {
                           setSelectedMake(make);
                           setSelectedCar(make.models[0]);
                           setWizardStep(2);
                         }}
                       >
-                        <View style={[styles.makeBadgeDot, { backgroundColor: make.badgeColor }]} />
-                        <Text style={[styles.makeName, isSelected && styles.textWhite]}>{make.name}</Text>
-                        <Text style={styles.makeCountry}>{make.country}</Text>
-                        <View style={styles.modelCountPill}>
-                          <Text style={styles.modelCountText}>{make.models.length} Models →</Text>
+                        {/* Top Row: Logo Badge & Country Indicator */}
+                        <View style={styles.makeCardTopRow}>
+                          <View
+                            style={[
+                              styles.makeLogoBadge,
+                              isSelected && styles.makeLogoBadgeActive,
+                              { borderColor: isSelected ? make.badgeColor : '#1e2430' }
+                            ]}
+                          >
+                            <CarBrandLogo
+                              makeId={make.id}
+                              size={34}
+                              color={isSelected ? '#ffffff' : make.badgeColor}
+                              isSelected={isSelected}
+                            />
+                          </View>
+                          <View style={styles.makeTopRightBadge}>
+                            <View style={[styles.makeBadgeDotSmall, { backgroundColor: make.badgeColor }]} />
+                            <Text style={styles.makeCountryTag}>
+                              {make.country.split('/')[0].trim()}
+                            </Text>
+                          </View>
+                        </View>
+
+                        {/* Brand Details */}
+                        <View style={styles.makeCardBody}>
+                          <Text style={[styles.makeName, isSelected && styles.textWhite]}>
+                            {make.name}
+                          </Text>
+                          <Text style={styles.makeCountryFull} numberOfLines={1}>
+                            {make.country}
+                          </Text>
+                        </View>
+
+                        {/* Bottom Action Pill */}
+                        <View
+                          style={[
+                            styles.modelCountPill,
+                            isSelected && styles.modelCountPillActive,
+                            isSelected && { backgroundColor: make.badgeColor + '22' }
+                          ]}
+                        >
+                          <Text
+                            style={[
+                              styles.modelCountText,
+                              isSelected && { color: make.badgeColor, fontWeight: 'bold' }
+                            ]}
+                          >
+                            {make.models.length} {make.models.length === 1 ? 'Model' : 'Models'} →
+                          </Text>
                         </View>
                       </TouchableOpacity>
                     );
@@ -870,13 +981,16 @@ export default function AppMainScreen() {
             {/* ------------------------------------------------------------- */}
             {/* STEP 3: CONFIGURE INSTALLED AUDIO EQUIPMENT                   */}
             {/* ------------------------------------------------------------- */}
+            {/* ------------------------------------------------------------- */}
+            {/* STEP 3: CONFIGURE INSTALLED AUDIO EQUIPMENT                   */}
+            {/* ------------------------------------------------------------- */}
             {wizardStep === 3 && (
               <View style={styles.glassCard}>
                 <View style={styles.cardHeaderFlex}>
                   <View>
                     <Text style={styles.cardTitle}>Step 03 // Installed Audio Hardware</Text>
                     <Text style={styles.cardSubNote}>
-                      Configuring for <Text style={styles.textWhite}>{selectedMake.name} {selectedCar.model}</Text>:
+                      Select brand then specific model for <Text style={styles.textWhite}>{selectedMake.name} {selectedCar.model}</Text>:
                     </Text>
                   </View>
                   <TouchableOpacity style={styles.outlinePillBtn} onPress={() => setWizardStep(2)}>
@@ -884,75 +998,55 @@ export default function AppMainScreen() {
                   </TouchableOpacity>
                 </View>
 
-                {/* 1. Head Unit */}
-                <Text style={styles.subConfigLabel}>1. Head Unit / Infotainment Source:</Text>
-                <View style={styles.configOptionsRow}>
-                  {HEAD_UNIT_OPTIONS.map((item) => (
-                    <TouchableOpacity
-                      key={item.id}
-                      style={[styles.configOptionChip, selectedHeadUnit.id === item.id && styles.configOptionChipActive]}
-                      onPress={() => setSelectedHeadUnit(item)}
-                    >
-                      <Text style={[styles.configOptionChipText, selectedHeadUnit.id === item.id && styles.textWhite]}>{item.name}</Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
+                {/* 1. Head Unit / Infotainment Source */}
+                <EquipmentBrandModelSelector<HeadUnitItem>
+                  categoryTitle="Head Unit / Infotainment Receiver"
+                  categoryNumber="01"
+                  icon="📻"
+                  brandGroups={HEAD_UNIT_BRANDS}
+                  selectedItem={selectedHeadUnit as any}
+                  onSelectItem={(item) => setSelectedHeadUnit(item as any)}
+                />
 
-                {/* 2. Front Speakers */}
-                <Text style={styles.subConfigLabel}>2. Front Door Speakers & Tweeters:</Text>
-                <View style={styles.configOptionsRow}>
-                  {FRONT_SPEAKER_OPTIONS.map((item) => (
-                    <TouchableOpacity
-                      key={item.id}
-                      style={[styles.configOptionChip, selectedFrontSpeaker.id === item.id && styles.configOptionChipActive]}
-                      onPress={() => setSelectedFrontSpeaker(item)}
-                    >
-                      <Text style={[styles.configOptionChipText, selectedFrontSpeaker.id === item.id && styles.textWhite]}>{item.name}</Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
+                {/* 2. Front Door Component Speakers */}
+                <EquipmentBrandModelSelector<SpeakerItem>
+                  categoryTitle="Front Door Speakers & Tweeters"
+                  categoryNumber="02"
+                  icon="🔊"
+                  brandGroups={FRONT_SPEAKER_BRANDS}
+                  selectedItem={selectedFrontSpeaker as any}
+                  onSelectItem={(item) => setSelectedFrontSpeaker(item as any)}
+                />
 
-                {/* 3. Rear Speakers */}
-                <Text style={styles.subConfigLabel}>3. Rear Door / Fill Speakers:</Text>
-                <View style={styles.configOptionsRow}>
-                  {REAR_SPEAKER_OPTIONS.map((item) => (
-                    <TouchableOpacity
-                      key={item.id}
-                      style={[styles.configOptionChip, selectedRearSpeaker.id === item.id && styles.configOptionChipActive]}
-                      onPress={() => setSelectedRearSpeaker(item)}
-                    >
-                      <Text style={[styles.configOptionChipText, selectedRearSpeaker.id === item.id && styles.textWhite]}>{item.name}</Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
+                {/* 3. Rear Door / Fill Speakers */}
+                <EquipmentBrandModelSelector<SpeakerItem>
+                  categoryTitle="Rear Door / Spatial Fill Speakers"
+                  categoryNumber="03"
+                  icon="🔉"
+                  brandGroups={REAR_SPEAKER_BRANDS}
+                  selectedItem={selectedRearSpeaker as any}
+                  onSelectItem={(item) => setSelectedRearSpeaker(item as any)}
+                />
 
-                {/* 4. Amplifiers */}
-                <Text style={styles.subConfigLabel}>4. Power Amplifiers:</Text>
-                <View style={styles.configOptionsRow}>
-                  {AMPLIFIER_OPTIONS.map((item) => (
-                    <TouchableOpacity
-                      key={item.id}
-                      style={[styles.configOptionChip, selectedAmplifier.id === item.id && styles.configOptionChipActive]}
-                      onPress={() => setSelectedAmplifier(item)}
-                    >
-                      <Text style={[styles.configOptionChipText, selectedAmplifier.id === item.id && styles.textWhite]}>{item.name}</Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
+                {/* 4. Power Amplifiers */}
+                <EquipmentBrandModelSelector<AmplifierItem>
+                  categoryTitle="Power Amplifiers & DSP Multi-Channels"
+                  categoryNumber="04"
+                  icon="⚡"
+                  brandGroups={AMPLIFIER_BRANDS}
+                  selectedItem={selectedAmplifier as any}
+                  onSelectItem={(item) => setSelectedAmplifier(item as any)}
+                />
 
-                {/* 5. Subwoofer */}
-                <Text style={styles.subConfigLabel}>5. Subwoofer & Enclosure Box Tuning:</Text>
-                <View style={styles.configOptionsRow}>
-                  {SUBWOOFER_OPTIONS.map((item) => (
-                    <TouchableOpacity
-                      key={item.id}
-                      style={[styles.configOptionChip, selectedSubwoofer.id === item.id && styles.configOptionChipActive]}
-                      onPress={() => setSelectedSubwoofer(item)}
-                    >
-                      <Text style={[styles.configOptionChipText, selectedSubwoofer.id === item.id && styles.textWhite]}>{item.name}</Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
+                {/* 5. Subwoofer & Enclosure */}
+                <EquipmentBrandModelSelector<SubwooferItem>
+                  categoryTitle="Subwoofer & Enclosure Box Tuning"
+                  categoryNumber="05"
+                  icon="💥"
+                  brandGroups={SUBWOOFER_BRANDS}
+                  selectedItem={selectedSubwoofer as any}
+                  onSelectItem={(item) => setSelectedSubwoofer(item as any)}
+                />
 
                 {/* Proceed to Step 4 Button */}
                 <TouchableOpacity style={styles.whitePillBtnLarge} onPress={() => setWizardStep(4)}>
@@ -1756,8 +1850,68 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: 4
   },
+  stepTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    flexWrap: 'wrap',
+  },
+  brandCountBadge: {
+    backgroundColor: '#161b24',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#30363d',
+  },
+  brandCountBadgeText: {
+    color: '#38bdf8',
+    fontSize: 10,
+    fontWeight: '700',
+    fontFamily: 'monospace',
+  },
+  makeCategoryTabs: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 14,
+    marginTop: 4,
+  },
+  makeCategoryTab: {
+    backgroundColor: '#06080d',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 9999,
+    borderWidth: 1,
+    borderColor: '#1e2430',
+  },
+  makeCategoryTabActive: {
+    backgroundColor: '#161b24',
+    borderColor: '#38bdf8',
+  },
+  makeCategoryTabText: {
+    color: '#8b949e',
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  makeCategoryTabTextActive: {
+    color: '#ffffff',
+    fontWeight: '700',
+  },
   searchBarContainer: {
-    marginBottom: 16
+    marginBottom: 16,
+    position: 'relative',
+    justifyContent: 'center',
+  },
+  searchClearBtn: {
+    position: 'absolute',
+    right: 12,
+    top: 10,
+    padding: 6,
+  },
+  searchClearBtnText: {
+    color: '#8b949e',
+    fontSize: 12,
   },
   searchInput: {
     backgroundColor: '#06080d',
@@ -1766,55 +1920,100 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 12,
+    paddingRight: 40,
     color: '#ffffff',
-    fontSize: 13
+    fontSize: 13,
   },
   makeGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 12
+    gap: 12,
   },
   makeCard: {
     flex: 1,
-    minWidth: 200,
+    minWidth: 210,
+    maxWidth: 280,
     backgroundColor: '#06080d',
-    borderRadius: 14,
+    borderRadius: 16,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#1e2430'
+    borderColor: '#1e2430',
+    justifyContent: 'space-between',
   },
   makeCardActive: {
-    borderColor: '#ffffff',
-    backgroundColor: '#0e121a'
+    backgroundColor: '#0e121a',
   },
-  makeBadgeDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    marginBottom: 8
+  makeCardTopRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 12,
+  },
+  makeLogoBadge: {
+    width: 52,
+    height: 52,
+    borderRadius: 12,
+    backgroundColor: '#0c0f17',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#1e2430',
+  },
+  makeLogoBadgeActive: {
+    backgroundColor: '#131824',
+  },
+  makeTopRightBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: '#0f121a',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 9999,
+    borderWidth: 1,
+    borderColor: '#1e2430',
+  },
+  makeBadgeDotSmall: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  makeCountryTag: {
+    color: '#8b949e',
+    fontSize: 10,
+    fontWeight: '600',
+  },
+  makeCardBody: {
+    marginBottom: 14,
   },
   makeName: {
-    color: '#cbd5e1',
+    color: '#e2e8f0',
     fontSize: 16,
     fontWeight: 'bold',
-    marginBottom: 2
+    marginBottom: 2,
+    letterSpacing: -0.2,
   },
-  makeCountry: {
-    color: '#6e7681',
+  makeCountryFull: {
+    color: '#64748b',
     fontSize: 11,
-    marginBottom: 12
   },
   modelCountPill: {
     backgroundColor: '#12151d',
-    paddingVertical: 4,
-    paddingHorizontal: 8,
+    paddingVertical: 5,
+    paddingHorizontal: 10,
     borderRadius: 9999,
-    alignSelf: 'flex-start'
+    alignSelf: 'flex-start',
+    borderWidth: 1,
+    borderColor: '#1e2430',
+  },
+  modelCountPillActive: {
+    borderColor: 'transparent',
   },
   modelCountText: {
     color: '#8b949e',
-    fontSize: 10,
-    fontFamily: 'monospace'
+    fontSize: 11,
+    fontFamily: 'monospace',
+    fontWeight: '600',
   },
 
   // MODEL GRID

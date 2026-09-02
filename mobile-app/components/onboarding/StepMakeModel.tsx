@@ -17,6 +17,7 @@ import {
   VehicleMake,
   CarModelData,
 } from '../../constants/catalog';
+import { CarBrandLogo } from '../ui/CarBrandLogo';
 
 const SPEED_OF_SOUND = 34.3; // cm/ms @ 20°C
 
@@ -181,6 +182,7 @@ export const StepMakeModel: React.FC<StepMakeModelProps> = ({
                 style={[
                   styles.makeCard,
                   isSelected && styles.makeCardActive,
+                  isSelected && { borderColor: make.badgeColor },
                 ]}
                 onPress={() => {
                   onSelectMake(make);
@@ -191,16 +193,31 @@ export const StepMakeModel: React.FC<StepMakeModelProps> = ({
                 }}
               >
                 <View style={styles.makeCardTop}>
-                  <View style={[styles.makeBadgeDot, { backgroundColor: make.badgeColor }]} />
-                  <Text style={styles.makeCountry}>{make.country.split('/')[0].trim()}</Text>
+                  <View
+                    style={[
+                      styles.makeLogoFrame,
+                      isSelected && { backgroundColor: '#161b24', borderColor: make.badgeColor }
+                    ]}
+                  >
+                    <CarBrandLogo
+                      makeId={make.id}
+                      size={28}
+                      color={isSelected ? '#ffffff' : make.badgeColor}
+                      isSelected={isSelected}
+                    />
+                  </View>
+                  <View style={styles.makeCountryBadge}>
+                    <View style={[styles.makeBadgeDot, { backgroundColor: make.badgeColor }]} />
+                    <Text style={styles.makeCountry}>{make.country.split('/')[0].trim()}</Text>
+                  </View>
                 </View>
 
                 <Text style={[styles.makeName, isSelected && styles.textWhite]}>
                   {make.name}
                 </Text>
 
-                <View style={styles.makeModelCount}>
-                  <Text style={styles.makeModelCountText}>
+                <View style={[styles.makeModelCount, isSelected && { backgroundColor: make.badgeColor + '22' }]}>
+                  <Text style={[styles.makeModelCountText, isSelected && { color: make.badgeColor, fontWeight: 'bold' }]}>
                     {make.models.length} {make.models.length === 1 ? 'MODEL' : 'MODELS'}
                   </Text>
                 </View>
@@ -569,27 +586,43 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
   },
   makeCard: {
-    width: 140,
+    width: 155,
     backgroundColor: tokens.colors.bg.panel,
     borderColor: tokens.colors.border.hairline,
     borderWidth: 1,
     borderRadius: tokens.radius.md,
     padding: tokens.spacing.md,
     gap: tokens.spacing.xs,
+    justifyContent: 'space-between',
   },
   makeCardActive: {
-    borderColor: tokens.colors.border.active,
     backgroundColor: tokens.colors.bg.elevated,
   },
   makeCardTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    marginBottom: tokens.spacing.xs,
+  },
+  makeLogoFrame: {
+    width: 40,
+    height: 40,
+    borderRadius: tokens.radius.sm + 2,
+    backgroundColor: tokens.colors.bg.inset,
+    borderWidth: 1,
+    borderColor: tokens.colors.border.hairline,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  makeCountryBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
   },
   makeBadgeDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+    width: 6,
+    height: 6,
+    borderRadius: 3,
   },
   makeCountry: {
     fontFamily: tokens.typography.fontFamily.sans,
@@ -605,6 +638,11 @@ const styles = StyleSheet.create({
   },
   makeModelCount: {
     marginTop: tokens.spacing.xs,
+    paddingHorizontal: tokens.spacing.xs + 2,
+    paddingVertical: 3,
+    borderRadius: tokens.radius.full,
+    alignSelf: 'flex-start',
+    backgroundColor: tokens.colors.bg.inset,
   },
   makeModelCountText: {
     fontFamily: tokens.typography.fontFamily.mono,

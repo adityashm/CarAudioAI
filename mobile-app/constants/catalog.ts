@@ -415,6 +415,7 @@ export const INDIAN_CAR_MAKES: VehicleMake[] = [
         resonantFreqHz: 188,
         distances_rhd: { FL: 141, FR: 97, RL: 160, RR: 119, SUB: 222 },
         speakerSizes: { front: '6.5" Component', rear: '6.5" Coaxial', tweeterLocation: 'A-Pillar', maxDepthMm: 72 }
+      },
       {
         id: 'honda_amaze',
         make: 'Honda',
@@ -1247,139 +1248,852 @@ export const INDIAN_CAR_MAKES: VehicleMake[] = [
   }
 ];
 
-// Hardware Options Catalog
-export const HEAD_UNIT_OPTIONS = [
-  { id: 'nakamichi_nam5510', name: 'Nakamichi NAM5510 (14-Band EQ, 2.0V Pre-out)', preout: 2.0, bands: 14, type: 'touchscreen' },
-  { id: 'pioneer_80prs', name: 'Pioneer DEH-80PRS (31-Band Active DSP, 5.0V Pre-out)', preout: 5.0, bands: 31, type: 'audiophile' },
-  { id: 'sony_gs9', name: 'Sony RSX-GS9 High-Res DSD (10-Band EQ, 5.0V Pre-out)', preout: 5.0, bands: 10, type: 'audiophile' },
-  { id: 'alpine_ilx650', name: 'Alpine iLX-W650 (9-Band Parametric, 4.0V Pre-out)', preout: 4.0, bands: 9, type: 'touchscreen' },
-  { id: 'android_generic', name: 'Android Screen (10/12-Band EQ, 1.5V Pre-out)', preout: 1.5, bands: 12, type: 'android' },
-  { id: 'factory_stock', name: 'Factory Stock OEM Screen (3-Band Bass/Mid/Treble, High-Level)', preout: 0.8, bands: 3, type: 'stock' }
-];
+// =========================================================================
+// COMPREHENSIVE MULTI-BRAND AUDIO HARDWARE CATALOG
+// =========================================================================
 
-export const FRONT_SPEAKER_OPTIONS = [
-  { id: 'sony_xs162gs', name: 'Sony XS-162GS (6.5" 2-Way Components)', rms: 45, ohms: 4, hpf: 80, sensitivity: 89 },
-  { id: 'focal_access', name: 'Focal Access 165-AS (6.5" Components, Glass Fiber Cone)', rms: 60, ohms: 4, hpf: 75, sensitivity: 91.3 },
-  { id: 'morel_maximo', name: 'Morel Maximo Ultra 602 (6.5" Audiophile Components)', rms: 90, ohms: 4, hpf: 70, sensitivity: 90.5 },
-  { id: 'hertz_uno', name: 'Hertz Uno K 165 (6.5" High-Efficiency Components)', rms: 70, ohms: 4, hpf: 80, sensitivity: 93.5 },
-  { id: 'jbl_stage3', name: 'JBL Stage3 607C (6.5" Components, Plus One Cone)', rms: 50, ohms: 3, hpf: 85, sensitivity: 92 },
-  { id: 'factory_stock', name: 'Factory Stock Door Speakers (Paper Cone)', rms: 15, ohms: 4, hpf: 90, sensitivity: 86 }
-];
+export interface HeadUnitItem {
+  id: string;
+  brand: string;
+  model: string;
+  name: string;
+  preout: number; // Volts RMS
+  bands: number;  // EQ bands
+  type: 'touchscreen' | 'audiophile' | 'single_din' | 'android' | 'stock' | 'custom';
+  dac?: string;
+  hiResAudio?: boolean;
+  wirelessCarPlay?: boolean;
+  desc?: string;
+}
 
-export const REAR_SPEAKER_OPTIONS = [
-  { id: 'sony_xs162gs_coax', name: 'Sony XS-162GS (6.5" Coaxials)', rms: 45, ohms: 4, hpf: 90 },
-  { id: 'focal_acx165', name: 'Focal Auditor ACX 165 (6.5" Coaxials)', rms: 60, ohms: 4, hpf: 85 },
-  { id: 'hertz_dcx', name: 'Hertz Dieci DCX 165.3 (6.5" Coaxials)', rms: 60, ohms: 4, hpf: 85 },
-  { id: 'jbl_stage3_627', name: 'JBL Stage3 627 (6.5" Coaxials)', rms: 45, ohms: 3, hpf: 90 },
-  { id: 'factory_stock_rear', name: 'Factory Stock Rear Door Speakers', rms: 15, ohms: 4, hpf: 100 },
-  { id: 'none', name: 'None / Rear Delete (Pure Front Soundstage SQ Setup)', rms: 0, ohms: 4, hpf: 0 }
-];
+export interface HeadUnitBrandGroup {
+  id: string;
+  brand: string;
+  country: string;
+  models: HeadUnitItem[];
+}
 
-export const AMPLIFIER_OPTIONS = [
+export interface SpeakerItem {
+  id: string;
+  brand: string;
+  model: string;
+  name: string;
+  type: 'component' | 'coaxial' | '3way' | 'stock' | 'custom';
+  size: string;
+  rms: number;  // Watts RMS per channel
+  peak: number; // Watts Peak
+  ohms: number; // Nominal Impedance
+  hpf: number;  // Recommended High Pass Filter cutoff (Hz)
+  sensitivity: number; // dB @ 1W/1m
+  tweeterType?: string;
+  desc?: string;
+}
+
+export interface SpeakerBrandGroup {
+  id: string;
+  brand: string;
+  country: string;
+  models: SpeakerItem[];
+}
+
+export interface AmplifierItem {
+  id: string;
+  brand: string;
+  model: string;
+  name: string;
+  channels: string;
+  frontRms: number; // Watts RMS per channel @ 4Ω
+  rearRms: number;  // Watts RMS per channel @ 4Ω
+  subRms: number;   // Watts RMS Sub channel @ 4Ω / 2Ω
+  ampClass: 'Class-D' | 'Class-AB' | 'DSP-Amp' | 'Stock';
+  hasSubChannel: boolean;
+  snr?: number;     // Signal to Noise ratio dB
+  desc?: string;
+}
+
+export interface AmplifierBrandGroup {
+  id: string;
+  brand: string;
+  country: string;
+  models: AmplifierItem[];
+}
+
+export interface SubwooferItem {
+  id: string;
+  brand: string;
+  model: string;
+  name: string;
+  type: 'ported' | 'sealed' | 'underseat' | 'spare_wheel' | 'none' | 'custom';
+  size: string;
+  tuneHz: number;   // Port tuning frequency (0 for sealed)
+  rms: number;      // Watts RMS
+  peak: number;     // Watts Peak
+  ohms: number;     // Wiring impedance (Ohms)
+  voiceCoil: 'SVC 4Ω' | 'DVC 4Ω (2Ω/8Ω)' | 'DVC 2Ω (1Ω/4Ω)' | 'Active Amp' | 'None';
+  desc?: string;
+}
+
+export interface SubwooferBrandGroup {
+  id: string;
+  brand: string;
+  country: string;
+  models: SubwooferItem[];
+}
+
+// -------------------------------------------------------------------------
+// 1. HEAD UNIT BRANDS & MODELS
+// -------------------------------------------------------------------------
+export const HEAD_UNIT_BRANDS: HeadUnitBrandGroup[] = [
   {
-    id: 'moco_and_sb',
-    name: 'Dual Amp Setup: MOCO AF-04 (4-Ch Doors) + Sound Barrier SB-654 (Mono Sub)',
-    frontRms: 60,
-    rearRms: 60,
-    subRms: 250,
-    hasSubChannel: true
+    id: 'nakamichi',
+    brand: 'Nakamichi',
+    country: 'Japan',
+    models: [
+      { id: 'nakamichi_nam5510', brand: 'Nakamichi', model: 'NAM5510', name: 'Nakamichi NAM5510 (10.1" DSP Touchscreen)', preout: 4.0, bands: 14, type: 'touchscreen', hiResAudio: true, wirelessCarPlay: true, desc: '14-Band Parametric EQ, 4V Pre-outs, Optical TOSLINK output.' },
+      { id: 'nakamichi_nam5210', brand: 'Nakamichi', model: 'NAM5210', name: 'Nakamichi NAM5210 (9" IPS Screen)', preout: 2.0, bands: 14, type: 'touchscreen', wirelessCarPlay: true, desc: '14-Band EQ, 2V Front/Rear/Sub Pre-outs.' },
+      { id: 'nakamichi_nam5730', brand: 'Nakamichi', model: 'NAM5730', name: 'Nakamichi NAM5730 (Flagship 4K DSP)', preout: 4.0, bands: 31, type: 'touchscreen', hiResAudio: true, wirelessCarPlay: true, desc: '31-Band Active DSP, 4V Low-Noise Pre-outs.' },
+      { id: 'nakamichi_nq711b', brand: 'Nakamichi', model: 'NQ711B', name: 'Nakamichi NQ711B (Single DIN Bluetooth)', preout: 2.0, bands: 10, type: 'single_din', desc: 'Audiophile Single DIN head unit with FLAC playback.' }
+    ]
   },
   {
-    id: 'sony_xm_n1004',
-    name: '4-Channel Amplifier: Sony XM-N1004 (70W x 4 @ 4Ω)',
-    frontRms: 70,
-    rearRms: 70,
-    subRms: 175,
-    hasSubChannel: false
+    id: 'pioneer',
+    brand: 'Pioneer',
+    country: 'Japan',
+    models: [
+      { id: 'pioneer_80prs', brand: 'Pioneer', model: 'DEH-80PRS', name: 'Pioneer DEH-80PRS (Audiophile Reference)', preout: 5.0, bands: 31, type: 'audiophile', hiResAudio: true, desc: 'Dual 24-bit Burr-Brown DACs, 31-Band L/R EQ, 5V Gold-Plated Pre-outs, Active 3-Way Mode.' },
+      { id: 'pioneer_dmh_z5350bt', brand: 'Pioneer', model: 'DMH-Z5350BT', name: 'Pioneer DMH-Z5350BT (6.8" Capacitive)', preout: 4.0, bands: 13, type: 'touchscreen', wirelessCarPlay: true, desc: '13-Band Graphic EQ, 3x 4V RCA Pre-outs, Time Alignment.' },
+      { id: 'pioneer_dmh_zf9350bt', brand: 'Pioneer', model: 'DMH-ZF9350BT', name: 'Pioneer DMH-ZF9350BT (9" Floating Display)', preout: 4.0, bands: 13, type: 'touchscreen', hiResAudio: true, wirelessCarPlay: true, desc: 'Hi-Res 24-bit/96kHz Audio, 13-Band EQ, Master Sound Reviver.' },
+      { id: 'pioneer_dmh_a4450bt', brand: 'Pioneer', model: 'DMH-A4450BT', name: 'Pioneer DMH-A4450BT (Entry Touchscreen)', preout: 2.0, bands: 13, type: 'touchscreen', desc: '13-Band GEQ, 2V Pre-outs, Subwoofer Control.' },
+      { id: 'pioneer_deh_s4250bt', brand: 'Pioneer', model: 'DEH-S4250BT', name: 'Pioneer DEH-S4250BT (Single-DIN CD/BT)', preout: 2.0, bands: 13, type: 'single_din', desc: '13-Band EQ, Smart Sync integration.' }
+    ]
   },
   {
-    id: 'pioneer_gm_d8704',
-    name: '4-Channel Class-FD: Pioneer GM-D8704 (100W x 4 @ 4Ω)',
-    frontRms: 100,
-    rearRms: 100,
-    subRms: 300,
-    hasSubChannel: false
+    id: 'sony',
+    brand: 'Sony',
+    country: 'Japan',
+    models: [
+      { id: 'sony_xav_9500es', brand: 'Sony', model: 'XAV-9500ES', name: 'Sony Mobile ES XAV-9500ES (Flagship High-Res)', preout: 5.0, bands: 14, type: 'audiophile', hiResAudio: true, wirelessCarPlay: true, desc: 'ESS 32-bit DAC, 5V High-Voltage Pre-outs, 14-Band EQ + Time Alignment, LDAC Bluetooth.' },
+      { id: 'sony_xav_ax8500', brand: 'Sony', model: 'XAV-AX8500', name: 'Sony XAV-AX8500 (10.1" Anti-Glare)', preout: 5.0, bands: 14, type: 'touchscreen', hiResAudio: true, wirelessCarPlay: true, desc: '5V 3-Pre-outs, 14-Band Parametric EQ, HDMI Input.' },
+      { id: 'sony_xav_ax5500', brand: 'Sony', model: 'XAV-AX5500', name: 'Sony XAV-AX5500 (6.95" Dual USB)', preout: 5.0, bands: 10, type: 'touchscreen', desc: '5V Pre-outs, 10-Band Graphic EQ with DSO soundstage enhancer.' },
+      { id: 'sony_xav_ax3200', brand: 'Sony', model: 'XAV-AX3200', name: 'Sony XAV-AX3200 (6.95" A/V Touchscreen)', preout: 2.0, bands: 10, type: 'touchscreen', desc: '10-Band EQ, Extra Bass circuitry, A/V Input.' },
+      { id: 'sony_dsx_a410bt', brand: 'Sony', model: 'DSX-A410BT', name: 'Sony DSX-A410BT (Mechless 1-DIN)', preout: 2.0, bands: 10, type: 'single_din', desc: '10-Band EQ, 2V Pre-outs, Dual Bluetooth.' }
+    ]
   },
   {
-    id: 'dsp_amp_8ch',
-    name: '8-Channel DSP Amplifier (e.g. Helix / Musway / Zapco 8x60W)',
-    frontRms: 75,
-    rearRms: 60,
-    subRms: 350,
-    hasSubChannel: true
+    id: 'alpine',
+    brand: 'Alpine',
+    country: 'Japan',
+    models: [
+      { id: 'alpine_ilx_f511e', brand: 'Alpine', model: 'iLX-F511E (Halo11)', name: 'Alpine Halo11 iLX-F511E (11" Floating QLED)', preout: 4.0, bands: 13, type: 'touchscreen', hiResAudio: true, wirelessCarPlay: true, desc: 'Hi-Res 96kHz/24bit, 13-Band Parametric EQ, 4V Pre-outs, 6-Channel Time Correction.' },
+      { id: 'alpine_ilx_f509e', brand: 'Alpine', model: 'iLX-F509E (Halo9)', name: 'Alpine Halo9 iLX-F509E (9" Floating QLED)', preout: 4.0, bands: 13, type: 'touchscreen', hiResAudio: true, wirelessCarPlay: true, desc: 'Class-D Built-in Power, 4V Pre-outs, Parametric EQ.' },
+      { id: 'alpine_ilx_w670', brand: 'Alpine', model: 'iLX-W670', name: 'Alpine iLX-W670 (7" Double DIN)', preout: 4.0, bands: 13, type: 'touchscreen', desc: '13-Band EQ, 4V Front/Rear/Sub Pre-outs, Sound Boost.' },
+      { id: 'alpine_ute_73bt', brand: 'Alpine', model: 'UTE-73BT', name: 'Alpine UTE-73BT (Single-DIN Bluetooth)', preout: 2.0, bands: 3, type: 'single_din', desc: 'BassEngine SQ, 24-bit DAC, 2V Pre-outs.' }
+    ]
   },
   {
-    id: 'headunit_power',
-    name: 'Direct Head Unit Internal Power (No External Amplifier ~20W RMS)',
-    frontRms: 18,
-    rearRms: 18,
-    subRms: 0,
-    hasSubChannel: false
+    id: 'jbl',
+    brand: 'JBL (Harman)',
+    country: 'USA',
+    models: [
+      { id: 'jbl_legend_cp100', brand: 'JBL', model: 'Legend CP100', name: 'JBL Legend CP100 (6.75" Touchscreen)', preout: 4.0, bands: 13, type: 'touchscreen', desc: 'Drive EQ, 4V Pre-outs, Apple CarPlay & Android Auto.' },
+      { id: 'jbl_celebrity_150', brand: 'JBL', model: 'Celebrity 150', name: 'JBL Celebrity 150 (Single DIN Mechless)', preout: 2.0, bands: 7, type: 'single_din', desc: 'Preset EQ profiles, Bluetooth handsfree, SD/USB.' }
+    ]
+  },
+  {
+    id: 'blaupunkt',
+    brand: 'Blaupunkt',
+    country: 'Germany',
+    models: [
+      { id: 'blaupunkt_key_largo', brand: 'Blaupunkt', model: 'Key Largo 980', name: 'Blaupunkt Key Largo 980 (9"/10.1" Android)', preout: 2.0, bands: 16, type: 'android', wirelessCarPlay: true, desc: '16-Band DSP, 2.0V RCA outputs, 4GB RAM + 64GB ROM.' },
+      { id: 'blaupunkt_san_diego', brand: 'Blaupunkt', model: 'San Diego 530', name: 'Blaupunkt San Diego 530 (6.2" Double DIN)', preout: 2.0, bands: 10, type: 'touchscreen', desc: '10-Band EQ, Front/Rear/Sub Pre-outs.' }
+    ]
+  },
+  {
+    id: 'oem_factory',
+    brand: 'Factory OEM / Android',
+    country: 'Global',
+    models: [
+      { id: 'factory_stock', brand: 'Factory OEM', model: 'Stock Infotainment', name: 'Factory Stock Screen (with High-to-Low Line Output Converter)', preout: 0.8, bands: 3, type: 'stock', desc: 'Factory speaker-level lines converted to RCA via LOC.' },
+      { id: 'android_generic_12', brand: 'Android Aftermarket', model: 'Generic TS10 / T5', name: 'Generic Android Head Unit (12-Band DSP)', preout: 1.5, bands: 12, type: 'android', desc: 'Standard Android head unit with simulated DSP and 1.5V pre-outs.' }
+    ]
+  },
+  {
+    id: 'custom_hu',
+    brand: 'Custom / Other',
+    country: 'Custom',
+    models: [
+      { id: 'custom_headunit_spec', brand: 'Custom', model: 'Custom Head Unit', name: 'Custom / Unlisted Head Unit (Manual Specs)', preout: 2.0, bands: 10, type: 'custom', desc: 'Configure custom pre-out voltage and EQ band parameters.' }
+    ]
   }
 ];
 
-export const SUBWOOFER_OPTIONS = [
+// -------------------------------------------------------------------------
+// 2. FRONT / COMPONENT SPEAKER BRANDS & MODELS
+// -------------------------------------------------------------------------
+export const FRONT_SPEAKER_BRANDS: SpeakerBrandGroup[] = [
   {
-    id: 'pioneer_tsw307',
-    name: 'Pioneer TS-W307D4 (12" DVC Ported @ 35Hz Slot Port)',
-    type: 'ported',
-    tuneHz: 35,
-    rms: 250,
-    ohms: 8,
-    desc: 'Deep loud bass tuned for Punjabi, Hip-Hop & EDM.'
+    id: 'sony',
+    brand: 'Sony',
+    country: 'Japan',
+    models: [
+      { id: 'sony_xs162gs', brand: 'Sony', model: 'XS-162GS', name: 'Sony XS-162GS (6.5" 2-Way Components)', type: 'component', size: '6.5"', rms: 45, peak: 250, ohms: 4, hpf: 80, sensitivity: 89, tweeterType: '1" Silk Soft Dome', desc: 'Composite Polypropylene Cone, Foam Rubber Surround.' },
+      { id: 'sony_xs160gs', brand: 'Sony', model: 'XS-160GS', name: 'Sony XS-160GS (6.5" 2-Way Coaxial)', type: 'coaxial', size: '6.5"', rms: 45, peak: 250, ohms: 4, hpf: 85, sensitivity: 89, tweeterType: 'Silk Dome Tweeter', desc: 'Wide dispersion coaxials for doors.' },
+      { id: 'sony_xs162es', brand: 'Sony', model: 'XS-162ES', name: 'Sony Mobile ES XS-162ES (6.5" High-Res Components)', type: 'component', size: '6.5"', rms: 90, peak: 270, ohms: 4, hpf: 70, sensitivity: 89, tweeterType: '1" Synthetic Fiber Soft Dome', desc: 'MRC (Mica Reinforced Cellular) Aramid Fiber Matrix, Bi-Ampable Crossover.' },
+      { id: 'sony_xs163es', brand: 'Sony', model: 'XS-163ES', name: 'Sony Mobile ES XS-163ES (3-Way Component System)', type: '3way', size: '6.5" + 3.5"', rms: 100, peak: 320, ohms: 4, hpf: 65, sensitivity: 89, tweeterType: '1" Soft Dome + 3.5" Midrange', desc: 'Audiophile 3-way stage with dedicated midrange drivers.' }
+    ]
   },
   {
-    id: 'jbl_basspro12',
-    name: 'JBL BassPro 12 (12" Factory Ported Enclosure @ 38Hz)',
-    type: 'ported',
-    tuneHz: 38,
-    rms: 150,
-    ohms: 4,
-    desc: 'High-efficiency factory ported box with Slipstream port.'
+    id: 'pioneer',
+    brand: 'Pioneer',
+    country: 'Japan',
+    models: [
+      { id: 'pioneer_tsc601in', brand: 'Pioneer', model: 'TS-C601IN', name: 'Pioneer TS-C601IN (6.5" Special India Tuning)', type: 'component', size: '6.5"', rms: 60, peak: 380, ohms: 4, hpf: 80, sensitivity: 91, tweeterType: '29mm Balanced Dome', desc: 'Tuned specifically for Indian acoustic cabin preferences.' },
+      { id: 'pioneer_tsa1600c', brand: 'Pioneer', model: 'TS-A1600C', name: 'Pioneer TS-A1600C (6.5" A-Series Components)', type: 'component', size: '6.5"', rms: 80, peak: 350, ohms: 4, hpf: 75, sensitivity: 91, tweeterType: '20mm Polyimide Hard Dome', desc: 'Carbon & MICA reinforced IMPP Cone.' },
+      { id: 'pioneer_tsz65c', brand: 'Pioneer', model: 'TS-Z65C', name: 'Pioneer Z-Series TS-Z65C (High-Res 40kHz Components)', type: 'component', size: '6.5"', rms: 100, peak: 300, ohms: 4, hpf: 65, sensitivity: 88, tweeterType: '29mm Aluminum Alloy Dome', desc: 'Twaron aramid fiber cone, audiophile crossover with -3/0/+3dB attenuation.' },
+      { id: 'pioneer_tsd65c', brand: 'Pioneer', model: 'TS-D65C', name: 'Pioneer D-Series TS-D65C (6.5" Open & Smooth)', type: 'component', size: '6.5"', rms: 90, peak: 270, ohms: 4, hpf: 70, sensitivity: 84, tweeterType: '26mm Polyester Soft Dome', desc: 'Aramid fiber interwoven with polypropylene.' }
+    ]
   },
   {
-    id: 'rockford_p3',
-    name: 'Rockford Fosgate P3D4-12 (12" Sealed Enclosure 1.25 cu ft)',
-    type: 'sealed',
-    tuneHz: 0,
-    rms: 600,
-    ohms: 4,
-    desc: 'Ultra-tight, accurate musical punch with smooth low-end rolloff.'
+    id: 'focal',
+    brand: 'Focal',
+    country: 'France',
+    models: [
+      { id: 'focal_ase165', brand: 'Focal', model: 'Auditor ASE 165', name: 'Focal Auditor ASE 165 (6.5" 2-Way Components)', type: 'component', size: '6.5"', rms: 60, peak: 120, ohms: 4, hpf: 75, sensitivity: 91.5, tweeterType: 'Inverted Mylar Dome', desc: 'Polypropylene cone, butyl surround, crisp French sound signature.' },
+      { id: 'focal_ps165sf', brand: 'Focal', model: 'Slatefiber PS 165 SF', name: 'Focal Slatefiber PS 165 SF (6.5" Made in France)', type: 'component', size: '6.5"', rms: 80, peak: 160, ohms: 4, hpf: 70, sensitivity: 91, tweeterType: 'Aluminum/Magnesium Inverted Dome', desc: 'Recycled non-woven carbon fibers embedded in thermoplastic polymer.' },
+      { id: 'focal_ps165fse', brand: 'Focal', model: 'Flax Evo PS 165 FSE', name: 'Focal Flax Evo PS 165 FSE (Slim 6.5" Audiophile)', type: 'component', size: '6.5"', rms: 60, peak: 120, ohms: 4, hpf: 70, sensitivity: 91.5, tweeterType: 'TAM Inverted M-Profile Dome', desc: 'Natural French Flax cone with TMD rubber surround.' },
+      { id: 'focal_es165k', brand: 'Focal', model: 'K2 Power ES 165 K', name: 'Focal K2 Power ES 165 K (Yellow Aramid Kevlar)', type: 'component', size: '6.5"', rms: 100, peak: 200, ohms: 4, hpf: 60, sensitivity: 92.8, tweeterType: 'TKM M-Profile Aramid Fiber', desc: 'Iconic yellow K2 sandwich cone with high dynamic headroom.' }
+    ]
   },
   {
-    id: 'alpine_sw12',
-    name: 'Alpine S-W12D4 (12" Custom Ported @ 33Hz)',
-    type: 'ported',
-    tuneHz: 33,
-    rms: 600,
-    ohms: 2,
-    desc: 'Ultra-deep sub-bass extension down to 25Hz.'
+    id: 'morel',
+    brand: 'Morel',
+    country: 'Israel',
+    models: [
+      { id: 'morel_maximo_ultra', brand: 'Morel', model: 'Maximo Ultra 602 HE', name: 'Morel Maximo Ultra 602 HE (High Efficiency 6.5")', type: 'component', size: '6.5"', rms: 90, peak: 180, ohms: 4, hpf: 70, sensitivity: 90.5, tweeterType: '25mm Soft Silk Dome', desc: 'Treated paper composite cone, warm, lush vocal tonality.' },
+      { id: 'morel_tempo_ultra', brand: 'Morel', model: 'Tempo Ultra 602 MkII', name: 'Morel Tempo Ultra 602 MkII (High-Power 6.5")', type: 'component', size: '6.5"', rms: 120, peak: 250, ohms: 4, hpf: 65, sensitivity: 90, tweeterType: '28mm Acuflex Soft Dome', desc: 'Large 1.5" voice coil, high power handling, precise musical imaging.' },
+      { id: 'morel_virtus_nano', brand: 'Morel', model: 'Virtus Nano Carbon 602', name: 'Morel Virtus Nano Carbon 602 (Ultra-Shallow 17mm)', type: 'component', size: '6.5"', rms: 100, peak: 300, ohms: 4, hpf: 70, sensitivity: 88, tweeterType: '28mm Acuflex Silk Dome', desc: 'Only 17mm mounting depth, ideal for shallow doors like Swift & Creta.' }
+    ]
   },
   {
-    id: 'underseat_compact',
-    name: 'Under-Seat Active Subwoofer (8" Die-Cast Sealed Box)',
-    type: 'sealed',
-    tuneHz: 0,
-    rms: 120,
-    ohms: 4,
-    desc: 'Space-saving stealth bass directly under driver or passenger seat.'
+    id: 'hertz',
+    brand: 'Hertz',
+    country: 'Italy',
+    models: [
+      { id: 'hertz_uno_k165', brand: 'Hertz', model: 'Uno K 165', name: 'Hertz Uno K 165 (6.5" High-Sensitivity)', type: 'component', size: '6.5"', rms: 70, peak: 300, ohms: 4, hpf: 80, sensitivity: 93.5, tweeterType: '24mm Neodymium PEI Dome', desc: 'Water-repellent pressed paper cone, 93.5dB high-efficiency output.' },
+      { id: 'hertz_dieci_dsk165', brand: 'Hertz', model: 'Dieci DSK 165.3', name: 'Hertz Dieci DSK 165.3 (6.5" 2-Way System)', type: 'component', size: '6.5"', rms: 80, peak: 160, ohms: 4, hpf: 75, sensitivity: 93, tweeterType: '24mm PEI Dome + Neodymium', desc: 'V-cone profile for best off-axis dispersion.' },
+      { id: 'hertz_cento_ck165', brand: 'Hertz', model: 'Cento CK 165', name: 'Hertz Cento CK 165 (6.5" High-Fidelity)', type: 'component', size: '6.5"', rms: 95, peak: 285, ohms: 4, hpf: 70, sensitivity: 93, tweeterType: '26mm Tetolon Fiber Soft Dome', desc: 'SPP-M (Semi-Pressed Paper-Mica) cone with compact crossover.' }
+    ]
   },
   {
-    id: 'spare_wheel_sub',
-    name: 'Spare Wheel Well Subwoofer (11" Sealed Round Box)',
-    type: 'sealed',
-    tuneHz: 0,
-    rms: 200,
-    ohms: 4,
-    desc: 'Zero boot space loss; mounted inside spare tire cavity.'
+    id: 'alpine',
+    brand: 'Alpine',
+    country: 'Japan',
+    models: [
+      { id: 'alpine_s2_s65c', brand: 'Alpine', model: 'S2-S65C', name: 'Alpine S-Series S2-S65C (Hi-Res 6.5" Components)', type: 'component', size: '6.5"', rms: 80, peak: 240, ohms: 4, hpf: 75, sensitivity: 88, tweeterType: '1" Silk Soft Dome', desc: 'Polypropylene, Glass Fiber, and Mica Cone Materials with HAMR Surround.' },
+      { id: 'alpine_r2_s65c', brand: 'Alpine', model: 'R2-S65C', name: 'Alpine R-Series R2-S65C (High-Power 100W Hi-Res)', type: 'component', size: '6.5"', rms: 100, peak: 300, ohms: 4, hpf: 65, sensitivity: 88, tweeterType: '1" Magnesium Hard Dome (40kHz)', desc: 'Glass Fiber Reinforced Cone with multi-roll surround.' }
+    ]
+  },
+  {
+    id: 'jbl',
+    brand: 'JBL (Harman)',
+    country: 'USA',
+    models: [
+      { id: 'jbl_club_6500c', brand: 'JBL', model: 'Club 6500C', name: 'JBL Club 6500C (6.5" 3Ω Components)', type: 'component', size: '6.5"', rms: 60, peak: 180, ohms: 3, hpf: 80, sensitivity: 92, tweeterType: 'Edge-Driven Silk Dome', desc: '3Ω low impedance design extracts maximum power from amps/headunits.' },
+      { id: 'jbl_stage3_607c', brand: 'JBL', model: 'Stage3 607C', name: 'JBL Stage3 607C (6.5" Plus One Cone)', type: 'component', size: '6.5"', rms: 50, peak: 250, ohms: 3, hpf: 85, sensitivity: 92, tweeterType: 'Edge-Driven Dome', desc: 'Plus One woofer cone architecture provides up to 35% more cone area.' },
+      { id: 'jbl_stadium_62cf', brand: 'JBL', model: 'Stadium 62CF', name: 'JBL Stadium 62CF (Audiophile Aluminum Dome)', type: 'component', size: '6.5"', rms: 110, peak: 330, ohms: 3, hpf: 65, sensitivity: 93, tweeterType: '3/4" Aluminum Dome', desc: 'Converts to 3-way with optional Stadium 22S midrange.' }
+    ]
+  },
+  {
+    id: 'rockford',
+    brand: 'Rockford Fosgate',
+    country: 'USA',
+    models: [
+      { id: 'rockford_r165_s', brand: 'Rockford Fosgate', model: 'Prime R165-S', name: 'Rockford Fosgate Prime R165-S (6.5" 2-Way)', type: 'component', size: '6.5"', rms: 40, peak: 80, ohms: 4, hpf: 85, sensitivity: 89, tweeterType: '1/2" Mylar Balanced Dome', desc: 'Mica-injected polypropylene cone with foam surround.' },
+      { id: 'rockford_p165_si', brand: 'Rockford Fosgate', model: 'Punch P165-SI', name: 'Rockford Fosgate Punch P165-SI (6.5" Component)', type: 'component', size: '6.5"', rms: 60, peak: 120, ohms: 4, hpf: 75, sensitivity: 89, tweeterType: '1" PEI Dome', desc: 'VAST (Vertical Attach Surround Technique) increases effective radiating area.' }
+    ]
+  },
+  {
+    id: 'blam',
+    brand: 'Blam Audio',
+    country: 'France',
+    models: [
+      { id: 'blam_relax_165rs', brand: 'Blam', model: 'Relax 165 RS', name: 'Blam Relax 165 RS (6.5" High-Efficiency 2Ω)', type: 'component', size: '6.5"', rms: 75, peak: 150, ohms: 2, hpf: 75, sensitivity: 93, tweeterType: '20mm Soft Dome', desc: '2Ω high-efficiency voice coil designed to boost output from factory/aftermarket amps.' },
+      { id: 'blam_live_l165p', brand: 'Blam', model: 'Live L165P', name: 'Blam Live L165P Power System (3Ω 90W RMS)', type: 'component', size: '6.5"', rms: 90, peak: 180, ohms: 3, hpf: 65, sensitivity: 91.5, tweeterType: '25mm High-Resolution Soft Dome', desc: 'Machined cast aluminum basket with composite fiber cone.' }
+    ]
+  },
+  {
+    id: 'custom_spk',
+    brand: 'Custom / Other',
+    country: 'Custom',
+    models: [
+      { id: 'custom_front_speaker', brand: 'Custom', model: 'Custom Driver', name: 'Custom / Unlisted 2-Way Components (Manual Specs)', type: 'custom', size: '6.5"', rms: 60, peak: 180, ohms: 4, hpf: 80, sensitivity: 90, desc: 'Input custom RMS wattage and impedance.' }
+    ]
+  }
+];
+
+// -------------------------------------------------------------------------
+// 3. REAR SPEAKER BRANDS & MODELS
+// -------------------------------------------------------------------------
+export const REAR_SPEAKER_BRANDS: SpeakerBrandGroup[] = [
+  {
+    id: 'none',
+    brand: 'Rear Delete / None',
+    country: 'Global',
+    models: [
+      { id: 'none', brand: 'None', model: 'Rear Delete', name: 'None / Rear Delete (Pure Front Soundstage SQ Setup)', type: 'stock', size: 'None', rms: 0, peak: 0, ohms: 4, hpf: 0, sensitivity: 0, desc: 'Rear channels muted to preserve pinpoint front vocal soundstage.' }
+    ]
+  },
+  {
+    id: 'sony',
+    brand: 'Sony',
+    country: 'Japan',
+    models: [
+      { id: 'sony_xs162gs_coax', brand: 'Sony', model: 'XS-160GS', name: 'Sony XS-160GS (6.5" 2-Way Coaxials)', type: 'coaxial', size: '6.5"', rms: 45, peak: 250, ohms: 4, hpf: 85, sensitivity: 89, desc: 'Matching rear door coaxials for XS-162GS front stage.' },
+      { id: 'sony_xs_gtf1639', brand: 'Sony', model: 'XS-GTF1639', name: 'Sony XS-GTF1639 (6.5" 3-Way Coaxials)', type: 'coaxial', size: '6.5"', rms: 45, peak: 270, ohms: 4, hpf: 90, sensitivity: 90, desc: 'HOP aramid carbon fiber matrix woofer.' }
+    ]
+  },
+  {
+    id: 'pioneer',
+    brand: 'Pioneer',
+    country: 'Japan',
+    models: [
+      { id: 'pioneer_tsg1620f', brand: 'Pioneer', model: 'TS-G1620F', name: 'Pioneer TS-G1620F (6.5" 2-Way Coaxials)', type: 'coaxial', size: '6.5"', rms: 40, peak: 300, ohms: 4, hpf: 90, sensitivity: 89, desc: 'IMPP composite cone rear fill.' },
+      { id: 'pioneer_tsa1670f', brand: 'Pioneer', model: 'TS-A1670F', name: 'Pioneer TS-A1670F (6.5" 3-Way Coaxials)', type: 'coaxial', size: '6.5"', rms: 70, peak: 320, ohms: 4, hpf: 85, sensitivity: 87, desc: 'High-power 3-way coaxial rear fill.' }
+    ]
+  },
+  {
+    id: 'jbl',
+    brand: 'JBL (Harman)',
+    country: 'USA',
+    models: [
+      { id: 'jbl_club_622', brand: 'JBL', model: 'Club 622', name: 'JBL Club 622 (6.5" 2-Way Coaxials 3Ω)', type: 'coaxial', size: '6.5"', rms: 60, peak: 180, ohms: 3, hpf: 85, sensitivity: 93, desc: '3-ohm architecture extracts maximum output.' },
+      { id: 'jbl_stage2_624', brand: 'JBL', model: 'Stage2 624', name: 'JBL Stage2 624 (6.5" 2-Way Coaxials)', type: 'coaxial', size: '6.5"', rms: 40, peak: 240, ohms: 4, hpf: 90, sensitivity: 91, desc: 'Injection-molded polypropylene cone.' }
+    ]
+  },
+  {
+    id: 'focal',
+    brand: 'Focal',
+    country: 'France',
+    models: [
+      { id: 'focal_acx165', brand: 'Focal', model: 'Auditor ACX 165', name: 'Focal Auditor ACX 165 (6.5" 2-Way Coaxials)', type: 'coaxial', size: '6.5"', rms: 60, peak: 120, ohms: 4, hpf: 85, sensitivity: 91.5, desc: 'Inverted mylar dome tweeter for crisp ambient fill.' }
+    ]
+  },
+  {
+    id: 'hertz',
+    brand: 'Hertz',
+    country: 'Italy',
+    models: [
+      { id: 'hertz_dieci_dcx165', brand: 'Hertz', model: 'Dieci DCX 165.3', name: 'Hertz Dieci DCX 165.3 (6.5" 2-Way Coaxials)', type: 'coaxial', size: '6.5"', rms: 60, peak: 120, ohms: 4, hpf: 85, sensitivity: 93, desc: 'Neodymium tweeter with PEI dome.' }
+    ]
+  }
+];
+
+// -------------------------------------------------------------------------
+// 4. POWER AMPLIFIER BRANDS & MODELS
+// -------------------------------------------------------------------------
+export const AMPLIFIER_BRANDS: AmplifierBrandGroup[] = [
+  {
+    id: 'installer_combos',
+    brand: 'Installer Combos (Budget & Multi-Amp)',
+    country: 'India / Global',
+    models: [
+      {
+        id: 'moco_and_sb',
+        brand: 'MOCO + Sound Barrier',
+        model: 'AF-04 + SB-654 Dual Amp',
+        name: 'Dual Amp Setup: MOCO AF-04 (4-Ch Doors 60W) + Sound Barrier SB-654 (Mono Sub 250W)',
+        channels: '4-Ch + Mono',
+        frontRms: 60,
+        rearRms: 60,
+        subRms: 250,
+        ampClass: 'Class-AB',
+        hasSubChannel: true,
+        desc: 'Dedicated 4-channel AB amp for front/rear speakers + high current mono class-D sub block.'
+      },
+      {
+        id: 'headunit_power',
+        brand: 'Head Unit Power',
+        model: 'Direct Internal IC',
+        name: 'Direct Head Unit Internal Power (No External Amplifier ~18W RMS)',
+        channels: '4-Ch Internal',
+        frontRms: 18,
+        rearRms: 18,
+        subRms: 0,
+        ampClass: 'Stock',
+        hasSubChannel: false,
+        desc: 'Running speakers directly off headunit internal MOSFET 4x50W Max (~18W RMS).'
+      }
+    ]
+  },
+  {
+    id: 'sony',
+    brand: 'Sony',
+    country: 'Japan',
+    models: [
+      {
+        id: 'sony_xm_n1004',
+        brand: 'Sony',
+        model: 'XM-N1004',
+        name: 'Sony XM-N1004 (4-Channel 70W x 4 @ 4Ω / 175W x 2 Bridged)',
+        channels: '4-Channel',
+        frontRms: 70,
+        rearRms: 70,
+        subRms: 175,
+        ampClass: 'Class-AB',
+        hasSubChannel: false,
+        desc: 'High power Class-AB amplifier with Automatic Thermal Control.'
+      },
+      {
+        id: 'sony_xm_4es',
+        brand: 'Sony',
+        model: 'XM-4ES Mobile ES',
+        name: 'Sony Mobile ES XM-4ES (4-Channel High-Res 100W x 4 @ 4Ω)',
+        channels: '4-Channel',
+        frontRms: 100,
+        rearRms: 100,
+        subRms: 330,
+        ampClass: 'Class-D',
+        hasSubChannel: false,
+        desc: 'High-Resolution Class-D with optimized output coils for low noise.'
+      },
+      {
+        id: 'sony_xm_5es',
+        brand: 'Sony',
+        model: 'XM-5ES Mobile ES',
+        name: 'Sony Mobile ES XM-5ES (5-Channel 100W x 4 + 450W x 1 Sub)',
+        channels: '5-Channel',
+        frontRms: 100,
+        rearRms: 100,
+        subRms: 450,
+        ampClass: 'Class-D',
+        hasSubChannel: true,
+        desc: 'All-in-one 5-channel system amplifier for 4 doors + dedicated 450W mono sub channel.'
+      }
+    ]
+  },
+  {
+    id: 'pioneer',
+    brand: 'Pioneer',
+    country: 'Japan',
+    models: [
+      {
+        id: 'pioneer_gm_dx874',
+        brand: 'Pioneer',
+        model: 'GM-DX874 Class-FD',
+        name: 'Pioneer GM-DX874 (Hi-Res 100W x 4 @ 4Ω / 300W x 2 Bridged)',
+        channels: '4-Channel',
+        frontRms: 100,
+        rearRms: 100,
+        subRms: 300,
+        ampClass: 'Class-D',
+        hasSubChannel: false,
+        desc: 'Class-FD high efficiency with gold plated terminals and high capacity capacitors.'
+      },
+      {
+        id: 'pioneer_gm_e7004',
+        brand: 'Pioneer',
+        model: 'GM-E7004',
+        name: 'Pioneer GM-E7004 (4-Channel 70W x 4 @ 4Ω)',
+        channels: '4-Channel',
+        frontRms: 70,
+        rearRms: 70,
+        subRms: 190,
+        ampClass: 'Class-AB',
+        hasSubChannel: false,
+        desc: 'Budget-friendly reliable 4-channel power.'
+      },
+      {
+        id: 'pioneer_gm_d9701',
+        brand: 'Pioneer',
+        model: 'GM-D9701 Monoblock',
+        name: 'Pioneer GM-D9701 (Class-D Monoblock 500W @ 4Ω / 800W @ 2Ω / 1200W @ 1Ω)',
+        channels: 'Monoblock Sub',
+        frontRms: 0,
+        rearRms: 0,
+        subRms: 800,
+        ampClass: 'Class-D',
+        hasSubChannel: true,
+        desc: 'Dedicated heavy subwoofer amplifier with wired bass boost remote.'
+      }
+    ]
+  },
+  {
+    id: 'alpine',
+    brand: 'Alpine',
+    country: 'Japan',
+    models: [
+      {
+        id: 'alpine_s2_a36f',
+        brand: 'Alpine',
+        model: 'S2-A36F',
+        name: 'Alpine S-Series S2-A36F (Hi-Res 60W x 4 @ 4Ω / 90W x 4 @ 2Ω)',
+        channels: '4-Channel',
+        frontRms: 60,
+        rearRms: 60,
+        subRms: 180,
+        ampClass: 'Class-D',
+        hasSubChannel: false,
+        desc: 'Hi-Res certified Class-D with redesigned heatsink.'
+      },
+      {
+        id: 'alpine_r2_a60f',
+        brand: 'Alpine',
+        model: 'R2-A60F',
+        name: 'Alpine R-Series R2-A60F (100W x 4 @ 4Ω / 150W x 4 @ 2Ω)',
+        channels: '4-Channel',
+        frontRms: 100,
+        rearRms: 100,
+        subRms: 300,
+        ampClass: 'Class-D',
+        hasSubChannel: false,
+        desc: 'High damping factor for tight, controlled midbass.'
+      }
+    ]
+  },
+  {
+    id: 'jbl',
+    brand: 'JBL (Harman)',
+    country: 'USA',
+    models: [
+      {
+        id: 'jbl_club_a754',
+        brand: 'JBL',
+        model: 'Club A754',
+        name: 'JBL Club A754 (75W x 4 @ 4Ω / 100W x 4 @ 2Ω / 200W x 2 Bridged)',
+        channels: '4-Channel',
+        frontRms: 75,
+        rearRms: 75,
+        subRms: 200,
+        ampClass: 'Class-AB',
+        hasSubChannel: false,
+        desc: 'Variable crossovers and bass boost with speaker-level inputs.'
+      },
+      {
+        id: 'jbl_club_a600',
+        brand: 'JBL',
+        model: 'Club A600 Monoblock',
+        name: 'JBL Club A600 (Monoblock 350W @ 4Ω / 600W @ 2Ω)',
+        channels: 'Monoblock Sub',
+        frontRms: 0,
+        rearRms: 0,
+        subRms: 600,
+        ampClass: 'Class-D',
+        hasSubChannel: true,
+        desc: 'Class-D mono subwoofer amplifier with phase switch and subsonic filter.'
+      }
+    ]
+  },
+  {
+    id: 'dsp_brands',
+    brand: 'DSP Amplifiers (Helix / Musway / Zapco)',
+    country: 'Germany / USA',
+    models: [
+      {
+        id: 'helix_v_eight_dsp',
+        brand: 'Helix',
+        model: 'V EIGHT DSP MK2',
+        name: 'Helix V EIGHT DSP MK2 (8-Channel DSP Amp 75W x 8 @ 4Ω / 120W x 8 @ 2Ω)',
+        channels: '8-Channel DSP',
+        frontRms: 75,
+        rearRms: 75,
+        subRms: 400,
+        ampClass: 'DSP-Amp',
+        hasSubChannel: true,
+        desc: '64-bit Audio DSP with 10 DSP channels and ACO platform.'
+      },
+      {
+        id: 'musway_m6v3',
+        brand: 'Musway',
+        model: 'M6v3 DSP',
+        name: 'Musway M6v3 (6-Channel Class-D DSP Amp 70W x 6 @ 4Ω)',
+        channels: '6-Channel DSP',
+        frontRms: 70,
+        rearRms: 70,
+        subRms: 210,
+        ampClass: 'DSP-Amp',
+        hasSubChannel: true,
+        desc: 'Compact German-engineered Class-D DSP amplifier.'
+      }
+    ]
+  },
+  {
+    id: 'custom_amp',
+    brand: 'Custom / Other',
+    country: 'Custom',
+    models: [
+      {
+        id: 'custom_amplifier_spec',
+        brand: 'Custom',
+        model: 'Custom Amp',
+        name: 'Custom / Unlisted Power Amplifier (Manual RMS Specs)',
+        channels: '4-Channel',
+        frontRms: 75,
+        rearRms: 75,
+        subRms: 250,
+        ampClass: 'Class-D',
+        hasSubChannel: true,
+        desc: 'Manually specify per-channel RMS wattage.'
+      }
+    ]
+  }
+];
+
+// -------------------------------------------------------------------------
+// 5. SUBWOOFER & ENCLOSURE BRANDS & MODELS
+// -------------------------------------------------------------------------
+export const SUBWOOFER_BRANDS: SubwooferBrandGroup[] = [
+  {
+    id: 'pioneer',
+    brand: 'Pioneer',
+    country: 'Japan',
+    models: [
+      {
+        id: 'pioneer_tsw307',
+        brand: 'Pioneer',
+        model: 'TS-W307D4 Ported 35Hz',
+        name: 'Pioneer TS-W307D4 (12" DVC Ported Box @ 35Hz Slot Port)',
+        type: 'ported',
+        size: '12"',
+        tuneHz: 35,
+        rms: 250,
+        peak: 1000,
+        ohms: 8,
+        voiceCoil: 'DVC 4Ω (2Ω/8Ω)',
+        desc: 'Deep loud bass tuned for Punjabi, Hip-Hop & EDM.'
+      },
+      {
+        id: 'pioneer_tsw312d4',
+        brand: 'Pioneer',
+        model: 'TS-W312D4 Champion Series',
+        name: 'Pioneer TS-W312D4 (12" Champion Series Ported @ 36Hz)',
+        type: 'ported',
+        size: '12"',
+        tuneHz: 36,
+        rms: 500,
+        peak: 1600,
+        ohms: 2,
+        voiceCoil: 'DVC 4Ω (2Ω/8Ω)',
+        desc: 'High SPL champion series with dual spider and honeycomb cone.'
+      },
+      {
+        id: 'pioneer_tswx130ea',
+        brand: 'Pioneer',
+        model: 'TS-WX130EA Underseat',
+        name: 'Pioneer TS-WX130EA (8" Underseat Compact Active Subwoofer)',
+        type: 'underseat',
+        size: '8"',
+        tuneHz: 0,
+        rms: 50,
+        peak: 160,
+        ohms: 4,
+        voiceCoil: 'Active Amp',
+        desc: 'Stealth underseat bass with built-in Class-D amplifier.'
+      }
+    ]
+  },
+  {
+    id: 'jbl',
+    brand: 'JBL (Harman)',
+    country: 'USA',
+    models: [
+      {
+        id: 'jbl_basspro12',
+        brand: 'JBL',
+        model: 'BassPro 12 Ported',
+        name: 'JBL BassPro 12 (12" Factory Ported Enclosure @ 38Hz Slipstream)',
+        type: 'ported',
+        size: '12"',
+        tuneHz: 38,
+        rms: 150,
+        peak: 450,
+        ohms: 4,
+        voiceCoil: 'SVC 4Ω',
+        desc: 'Patented Slipstream port design eliminates port turbulence and chuffing.'
+      },
+      {
+        id: 'jbl_basspro_hub',
+        brand: 'JBL',
+        model: 'BassPro Hub Spare Wheel',
+        name: 'JBL BassPro Hub (11" Spare Wheel Well Active Subwoofer 200W)',
+        type: 'spare_wheel',
+        size: '11"',
+        tuneHz: 0,
+        rms: 200,
+        peak: 600,
+        ohms: 4,
+        voiceCoil: 'Active Amp',
+        desc: 'Mounts completely inside the spare wheel well with zero loss of boot luggage space.'
+      },
+      {
+        id: 'jbl_club_1224',
+        brand: 'JBL',
+        model: 'Club 1224 SSI',
+        name: 'JBL Club 1224 (12" Selectable Smart Impedance 2Ω/4Ω Sealed Box)',
+        type: 'sealed',
+        size: '12"',
+        tuneHz: 0,
+        rms: 275,
+        peak: 1100,
+        ohms: 4,
+        voiceCoil: 'SVC 4Ω',
+        desc: 'SSI switch allows instant toggle between 2-ohm and 4-ohm load.'
+      }
+    ]
+  },
+  {
+    id: 'sony',
+    brand: 'Sony',
+    country: 'Japan',
+    models: [
+      {
+        id: 'sony_xsw124gs',
+        brand: 'Sony',
+        model: 'XS-W124GS Ported 34Hz',
+        name: 'Sony XS-W124GS (12" 4Ω SVC Ported Box @ 34Hz)',
+        type: 'ported',
+        size: '12"',
+        tuneHz: 34,
+        rms: 350,
+        peak: 1800,
+        ohms: 4,
+        voiceCoil: 'SVC 4Ω',
+        desc: 'Dimpled cone woofer with stroke stabilizer rubber surround.'
+      },
+      {
+        id: 'sony_xs_aw8',
+        brand: 'Sony',
+        model: 'XS-AW8 Underseat',
+        name: 'Sony XS-AW8 (8" Slim Underseat Active Subwoofer 75W RMS)',
+        type: 'underseat',
+        size: '8"',
+        tuneHz: 0,
+        rms: 75,
+        peak: 160,
+        ohms: 4,
+        voiceCoil: 'Active Amp',
+        desc: 'Compact sealed cast-aluminum chassis with wired bass remote.'
+      }
+    ]
+  },
+  {
+    id: 'rockford',
+    brand: 'Rockford Fosgate',
+    country: 'USA',
+    models: [
+      {
+        id: 'rockford_p3d4_12',
+        brand: 'Rockford Fosgate',
+        model: 'Punch P3D4-12 Sealed 1.25 cu ft',
+        name: 'Rockford Fosgate Punch P3D4-12 (12" 600W RMS Sealed Box)',
+        type: 'sealed',
+        size: '12"',
+        tuneHz: 0,
+        rms: 600,
+        peak: 1200,
+        ohms: 2,
+        voiceCoil: 'DVC 4Ω (2Ω/8Ω)',
+        desc: 'Anodized aluminum cone and dustcap with VAST surround.'
+      },
+      {
+        id: 'rockford_p300_12',
+        brand: 'Rockford Fosgate',
+        model: 'Punch P300-12 Powered',
+        name: 'Rockford Fosgate Punch P300-12 (12" All-In-One 300W Powered Sub)',
+        type: 'sealed',
+        size: '12"',
+        tuneHz: 0,
+        rms: 300,
+        peak: 600,
+        ohms: 4,
+        voiceCoil: 'Active Amp',
+        desc: 'Closed-loop design with built-in 300W amplifier and quick-disconnect harness.'
+      }
+    ]
+  },
+  {
+    id: 'alpine',
+    brand: 'Alpine',
+    country: 'Japan',
+    models: [
+      {
+        id: 'alpine_sw12',
+        brand: 'Alpine',
+        model: 'S-W12D4 Custom Ported 33Hz',
+        name: 'Alpine S-Series S-W12D4 (12" DVC Custom Ported @ 33Hz)',
+        type: 'ported',
+        size: '12"',
+        tuneHz: 33,
+        rms: 600,
+        peak: 1800,
+        ohms: 2,
+        voiceCoil: 'DVC 4Ω (2Ω/8Ω)',
+        desc: 'Ultra-deep sub-bass extension down to 25Hz.'
+      },
+      {
+        id: 'alpine_pwe_s8',
+        brand: 'Alpine',
+        model: 'PWE-S8 Underseat',
+        name: 'Alpine PWE-S8 (8" Quad-Coil Underseat Active Subwoofer 120W)',
+        type: 'underseat',
+        size: '8"',
+        tuneHz: 0,
+        rms: 120,
+        peak: 240,
+        ohms: 4,
+        voiceCoil: 'Active Amp',
+        desc: 'Die-cast aluminum frame with side-panel controls.'
+      }
+    ]
+  },
+  {
+    id: 'focal',
+    brand: 'Focal',
+    country: 'France',
+    models: [
+      {
+        id: 'focal_sub_p25db',
+        brand: 'Focal',
+        model: 'Sub P 25 DB Sealed',
+        name: 'Focal Performance Sub P 25 DB (10" 250W RMS Sealed Box)',
+        type: 'sealed',
+        size: '10"',
+        tuneHz: 0,
+        rms: 250,
+        peak: 500,
+        ohms: 2,
+        voiceCoil: 'DVC 4Ω (2Ω/8Ω)',
+        desc: 'Polypropylene cone with high excursion for deep, punchy musical bass.'
+      }
+    ]
   },
   {
     id: 'none',
-    name: 'No Subwoofer Installed (Door Speakers Full-Range)',
-    type: 'none',
-    tuneHz: 0,
-    rms: 0,
-    ohms: 0,
-    desc: 'Doors handle lower frequencies without dedicated sub.'
+    brand: 'No Subwoofer Installed',
+    country: 'Global',
+    models: [
+      {
+        id: 'none',
+        brand: 'None',
+        model: 'No Subwoofer',
+        name: 'No Subwoofer Installed (Door Speakers Full-Range)',
+        type: 'none',
+        size: 'None',
+        tuneHz: 0,
+        rms: 0,
+        peak: 0,
+        ohms: 0,
+        voiceCoil: 'None',
+        desc: 'Doors handle lower frequencies without dedicated sub.'
+      }
+    ]
   }
 ];
+
+// -------------------------------------------------------------------------
+// FLATTENED BACKWARD-COMPATIBLE OPTION EXPORTS
+// -------------------------------------------------------------------------
+export const HEAD_UNIT_OPTIONS = HEAD_UNIT_BRANDS.flatMap((b) => b.models);
+export const FRONT_SPEAKER_OPTIONS = FRONT_SPEAKER_BRANDS.flatMap((b) => b.models);
+export const REAR_SPEAKER_OPTIONS = REAR_SPEAKER_BRANDS.flatMap((b) => b.models);
+export const AMPLIFIER_OPTIONS = AMPLIFIER_BRANDS.flatMap((b) => b.models);
+export const SUBWOOFER_OPTIONS = SUBWOOFER_BRANDS.flatMap((b) => b.models);

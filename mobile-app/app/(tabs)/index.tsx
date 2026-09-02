@@ -22,6 +22,15 @@ import {
   downloadMiniDspJson,
   generatePioneerXml,
   generateMiniDspJson,
+  downloadHelixAfpc,
+  generateHelixAfpcXml,
+  downloadMuswayPreset,
+  generateMuswayPresetJson,
+  downloadAndroidDspCsv,
+  generateAndroidDspCsv,
+  downloadInstallerBlueprintHtml,
+  generateInstallerBlueprintHtml,
+  printInstallerBlueprint,
 } from '@/services/exportService';
 import {
   INDIAN_CAR_MAKES,
@@ -1361,20 +1370,233 @@ export default function AppMainScreen() {
                 {/* TAB 6: DSP FILE EXPORT */}
                 {studioTab === 'export' && (
                   <View style={styles.glassCard}>
-                    <Text style={styles.cardTitle}>Export Ready-to-Flash DSP Configurations</Text>
-
-                    <View style={styles.codeExportCard}>
-                      <Text style={styles.codeExportTitle}>Pioneer DEH-80PRS XML Format</Text>
-                      <Text style={styles.codeExportBodyMono}>
-                        {`<PioneerDSPConfig version="1.0">\n  <Car>${selectedMake.name} ${selectedCar.model}</Car>\n  <TimeAlignment FR="${delaysMs.FR}ms" FL="${delaysMs.FL}ms" SUB="0ms"/>\n  <Crossover HPF="${frontHpf}Hz" LPF="${subLpf}Hz" Subsonic="${subsonicHz}Hz"/>\n</PioneerDSPConfig>`}
-                      </Text>
+                    <View style={styles.cardHeaderFlex}>
+                      <View>
+                        <Text style={styles.cardTitle}>Export Ready-to-Flash DSP Configurations</Text>
+                        <Text style={styles.cardSubNote}>
+                          Download verified tuning profiles for your hardware DSP or print an Installer Blueprint spec sheet.
+                        </Text>
+                      </View>
                     </View>
 
-                    <View style={styles.codeExportCard}>
-                      <Text style={styles.codeExportTitle}>MiniDSP 2x4 HD JSON Format</Text>
-                      <Text style={styles.codeExportBodyMono}>
-                        {`{\n  "vehicle": "${selectedMake.name} ${selectedCar.model}",\n  "delays_ms": { "FR": ${delaysMs.FR}, "FL": ${delaysMs.FL}, "SUB": 0 },\n  "crossover": { "front_hpf": ${frontHpf}, "sub_lpf": ${subLpf} }\n}`}
-                      </Text>
+                    {/* Master Blueprint Card */}
+                    <View style={styles.blueprintHeroCard}>
+                      <View style={styles.blueprintHeroLeft}>
+                        <Text style={styles.blueprintHeroBadge}>PROFESSIONAL INSTALLER SPEC SHEET</Text>
+                        <Text style={styles.blueprintHeroTitle}>{selectedMake.name} {selectedCar.model} Blueprint</Text>
+                        <Text style={styles.blueprintHeroSub}>
+                          Complete physical gain potentiometer clock guide, driver time alignment table, and crossover network.
+                        </Text>
+                      </View>
+                      <View style={styles.blueprintHeroBtnRow}>
+                        <TouchableOpacity
+                          style={styles.blueprintPrintBtn}
+                          onPress={() => {
+                            const html = generateInstallerBlueprintHtml({
+                              vehicleName: `${selectedMake.name} ${selectedCar.model}`,
+                              headUnitName: selectedHeadUnit.name,
+                              amplifierName: selectedAmplifier.name,
+                              speakerFrontName: selectedFrontSpeaker.name,
+                              speakerRearName: selectedRearSpeaker.name,
+                              subwooferName: selectedSubwoofer.name,
+                              delaysMs,
+                              frontHpf,
+                              rearHpf,
+                              subLpf,
+                              subsonicHz,
+                              gainSetting: {
+                                preoutVoltage: selectedHeadUnit.preout,
+                                ampInputV: +gainCalc.vInput.toFixed(2),
+                                clockAngle: gainCalc.clockAngle,
+                              },
+                              eqGains,
+                            });
+                            printInstallerBlueprint(html);
+                          }}
+                        >
+                          <Text style={styles.blueprintPrintBtnText}>🖨️ Print Blueprint Spec Sheet</Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                          style={styles.blueprintDownloadBtn}
+                          onPress={() => {
+                            const html = generateInstallerBlueprintHtml({
+                              vehicleName: `${selectedMake.name} ${selectedCar.model}`,
+                              headUnitName: selectedHeadUnit.name,
+                              amplifierName: selectedAmplifier.name,
+                              speakerFrontName: selectedFrontSpeaker.name,
+                              speakerRearName: selectedRearSpeaker.name,
+                              subwooferName: selectedSubwoofer.name,
+                              delaysMs,
+                              frontHpf,
+                              rearHpf,
+                              subLpf,
+                              subsonicHz,
+                              gainSetting: {
+                                preoutVoltage: selectedHeadUnit.preout,
+                                ampInputV: +gainCalc.vInput.toFixed(2),
+                                clockAngle: gainCalc.clockAngle,
+                              },
+                              eqGains,
+                            });
+                            downloadInstallerBlueprintHtml(`${selectedMake.name}_${selectedCar.model}`, html);
+                          }}
+                        >
+                          <Text style={styles.blueprintDownloadBtnText}>📥 Download HTML Sheet</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+
+                    {/* Hardware DSP Grid */}
+                    <View style={styles.exportCardsGrid}>
+                      {/* 1. Helix / Match DSP */}
+                      <View style={styles.codeExportCard}>
+                        <View style={styles.exportCardHeaderRow}>
+                          <View>
+                            <Text style={styles.codeExportTitle}>Audiotec Fischer Helix / Match DSP</Text>
+                            <Text style={styles.codeExportSub}>HELIX DSP.3S, MATCH UP 7DSP / UP 8DSP (.afpc XML)</Text>
+                          </View>
+                          <TouchableOpacity
+                            style={styles.exportDownloadBtn}
+                            onPress={() => {
+                              const xml = generateHelixAfpcXml({
+                                vehicleName: `${selectedMake.name} ${selectedCar.model}`,
+                                delaysMs,
+                                frontHpf,
+                                rearHpf,
+                                subLpf,
+                                subsonicHz,
+                                eqGains,
+                              });
+                              downloadHelixAfpc(`${selectedMake.name}_${selectedCar.model}`, xml);
+                            }}
+                          >
+                            <Text style={styles.exportDownloadBtnText}>Download .afpc ↓</Text>
+                          </TouchableOpacity>
+                        </View>
+                        <Text style={styles.codeExportBodyMono}>
+                          {`<AudiotecFischerProject Version="5.04.02">\n  <Device>HELIX DSP.3S / MATCH UP 7DSP</Device>\n  <TimeAlignment FL="${delaysMs.FL}ms" FR="${delaysMs.FR}ms" SUB="${delaysMs.SUB}ms"/>\n  <Crossover HPF="${frontHpf}Hz" LPF="${subLpf}Hz"/>\n</AudiotecFischerProject>`}
+                        </Text>
+                      </View>
+
+                      {/* 2. MiniDSP */}
+                      <View style={styles.codeExportCard}>
+                        <View style={styles.exportCardHeaderRow}>
+                          <View>
+                            <Text style={styles.codeExportTitle}>MiniDSP 2x4 HD / C-DSP 8x12</Text>
+                            <Text style={styles.codeExportSub}>Parametric biquad filters + channel routing (.json)</Text>
+                          </View>
+                          <TouchableOpacity
+                            style={styles.exportDownloadBtn}
+                            onPress={() => {
+                              const json = generateMiniDspJson({
+                                vehicleName: `${selectedMake.name} ${selectedCar.model}`,
+                                delaysMs,
+                                frontHpf,
+                                rearHpf,
+                                subLpf,
+                                subsonicHz,
+                                eqGains,
+                              });
+                              downloadMiniDspJson(`${selectedMake.name}_${selectedCar.model}`, json);
+                            }}
+                          >
+                            <Text style={styles.exportDownloadBtnText}>Download .json ↓</Text>
+                          </TouchableOpacity>
+                        </View>
+                        <Text style={styles.codeExportBodyMono}>
+                          {`{\n  "vehicle": "${selectedMake.name} ${selectedCar.model}",\n  "delays_ms": { "FL": ${delaysMs.FL}, "FR": ${delaysMs.FR}, "SUB": ${delaysMs.SUB} },\n  "crossover": { "front_hpf": ${frontHpf}, "sub_lpf": ${subLpf} }\n}`}
+                        </Text>
+                      </View>
+
+                      {/* 3. Musway / Zapco */}
+                      <View style={styles.codeExportCard}>
+                        <View style={styles.exportCardHeaderRow}>
+                          <View>
+                            <Text style={styles.codeExportTitle}>Musway / Zapco / DSP68</Text>
+                            <Text style={styles.codeExportSub}>Full 14-band PEQ + time delay profile (.json)</Text>
+                          </View>
+                          <TouchableOpacity
+                            style={styles.exportDownloadBtn}
+                            onPress={() => {
+                              const json = generateMuswayPresetJson({
+                                vehicleName: `${selectedMake.name} ${selectedCar.model}`,
+                                delaysMs,
+                                frontHpf,
+                                rearHpf,
+                                subLpf,
+                                subsonicHz,
+                                eqGains,
+                              });
+                              downloadMuswayPreset(`${selectedMake.name}_${selectedCar.model}`, json);
+                            }}
+                          >
+                            <Text style={styles.exportDownloadBtnText}>Download .json ↓</Text>
+                          </TouchableOpacity>
+                        </View>
+                        <Text style={styles.codeExportBodyMono}>
+                          {`{\n  "brand": "Musway / Zapco DSP",\n  "channels": [\n    { "id": "CH1_FL", "delay_ms": ${delaysMs.FL}, "hpf": ${frontHpf} },\n    { "id": "CH2_FR", "delay_ms": ${delaysMs.FR}, "hpf": ${frontHpf} }\n  ]\n}`}
+                        </Text>
+                      </View>
+
+                      {/* 4. Android Head Unit DSP */}
+                      <View style={styles.codeExportCard}>
+                        <View style={styles.exportCardHeaderRow}>
+                          <View>
+                            <Text style={styles.codeExportTitle}>Android Screen DSP Apps</Text>
+                            <Text style={styles.codeExportSub}>DUD / Joying / Nakamichi / TS10 Head Units (.csv)</Text>
+                          </View>
+                          <TouchableOpacity
+                            style={styles.exportDownloadBtn}
+                            onPress={() => {
+                              const csv = generateAndroidDspCsv({
+                                vehicleName: `${selectedMake.name} ${selectedCar.model}`,
+                                delaysMs,
+                                frontHpf,
+                                rearHpf,
+                                subLpf,
+                                eqGains,
+                              });
+                              downloadAndroidDspCsv(`${selectedMake.name}_${selectedCar.model}`, csv);
+                            }}
+                          >
+                            <Text style={styles.exportDownloadBtnText}>Download .csv ↓</Text>
+                          </TouchableOpacity>
+                        </View>
+                        <Text style={styles.codeExportBodyMono}>
+                          {`# CarAudioAI Android DSP Config\nTimeAlignment,FL,${delaysMs.FL},ms\nTimeAlignment,FR,${delaysMs.FR},ms\nCrossover_HPF,Front,${frontHpf},Hz\nCrossover_LPF,Subwoofer,${subLpf},Hz`}
+                        </Text>
+                      </View>
+
+                      {/* 5. Pioneer DEH-80PRS */}
+                      <View style={styles.codeExportCard}>
+                        <View style={styles.exportCardHeaderRow}>
+                          <View>
+                            <Text style={styles.codeExportTitle}>Pioneer DEH-80PRS / PRS Series</Text>
+                            <Text style={styles.codeExportSub}>Direct Active Network XML Preset (.xml)</Text>
+                          </View>
+                          <TouchableOpacity
+                            style={styles.exportDownloadBtn}
+                            onPress={() => {
+                              const xml = generatePioneerXml({
+                                vehicleName: `${selectedMake.name} ${selectedCar.model}`,
+                                delaysMs,
+                                frontHpf,
+                                rearHpf,
+                                subLpf,
+                                subsonicHz,
+                                eqGains,
+                              });
+                              downloadPioneerXml(`${selectedMake.name}_${selectedCar.model}`, xml);
+                            }}
+                          >
+                            <Text style={styles.exportDownloadBtnText}>Download .xml ↓</Text>
+                          </TouchableOpacity>
+                        </View>
+                        <Text style={styles.codeExportBodyMono}>
+                          {`<PioneerDSPConfig version="1.0">\n  <Car>${selectedMake.name} ${selectedCar.model}</Car>\n  <TimeAlignment FL="${delaysMs.FL}ms" FR="${delaysMs.FR}ms" SUB="${delaysMs.SUB}ms"/>\n  <Crossover HPF="${frontHpf}Hz" LPF="${subLpf}Hz"/>\n</PioneerDSPConfig>`}
+                        </Text>
+                      </View>
                     </View>
                   </View>
                 )}
@@ -1433,6 +1655,25 @@ export default function AppMainScreen() {
       <RtaMeasurementModal
         visible={rtaModalVisible}
         onClose={() => setRtaModalVisible(false)}
+        carName={`${selectedMake.name} ${selectedCar.model}`}
+        targetProfile={soundProfile}
+        onApplyAutoTune={(autoGains) => {
+          setEqGains(autoGains);
+          setStudioTab('eq');
+        }}
+        onApplyCuts={(cuts) => {
+          setEqGains((prev) => {
+            const next = [...prev];
+            cuts.forEach((c) => {
+              const idx = EQ_FREQUENCIES.indexOf(c.frequency_hz);
+              if (idx !== -1) {
+                next[idx] = +Math.max(-12, next[idx] - c.recommended_eq_cut_db).toFixed(1);
+              }
+            });
+            return next;
+          });
+          setStudioTab('eq');
+        }}
       />
     </SafeAreaView>
   );
@@ -2494,25 +2735,125 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 12
   },
+  blueprintHeroCard: {
+    backgroundColor: '#0c1322',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#1e3a5f',
+    padding: 20,
+    marginBottom: 20,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 16,
+  },
+  blueprintHeroLeft: {
+    flex: 1,
+    minWidth: 260,
+  },
+  blueprintHeroBadge: {
+    color: '#38bdf8',
+    fontSize: 10,
+    fontWeight: '800',
+    fontFamily: 'monospace',
+    letterSpacing: 0.8,
+    marginBottom: 4,
+  },
+  blueprintHeroTitle: {
+    color: '#ffffff',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 4,
+  },
+  blueprintHeroSub: {
+    color: '#94a3b8',
+    fontSize: 12,
+    lineHeight: 16,
+  },
+  blueprintHeroBtnRow: {
+    flexDirection: 'row',
+    gap: 10,
+    flexWrap: 'wrap',
+  },
+  blueprintPrintBtn: {
+    backgroundColor: '#38bdf8',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  blueprintPrintBtnText: {
+    color: '#020617',
+    fontWeight: '800',
+    fontSize: 12,
+  },
+  blueprintDownloadBtn: {
+    backgroundColor: '#1e293b',
+    borderWidth: 1,
+    borderColor: '#38bdf8',
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  blueprintDownloadBtnText: {
+    color: '#38bdf8',
+    fontWeight: '700',
+    fontSize: 12,
+  },
+  exportCardsGrid: {
+    gap: 12,
+  },
   codeExportCard: {
     backgroundColor: '#06080d',
-    padding: 14,
-    borderRadius: 12,
+    padding: 16,
+    borderRadius: 14,
     borderWidth: 1,
     borderColor: '#1e2430',
-    marginBottom: 10
+  },
+  exportCardHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 10,
+    flexWrap: 'wrap',
+    gap: 10,
   },
   codeExportTitle: {
     color: '#ffffff',
     fontWeight: 'bold',
-    fontSize: 12,
-    marginBottom: 6
+    fontSize: 13,
+  },
+  codeExportSub: {
+    color: '#64748b',
+    fontSize: 11,
+    marginTop: 2,
+  },
+  exportDownloadBtn: {
+    backgroundColor: '#161b24',
+    borderWidth: 1,
+    borderColor: '#30363d',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+  exportDownloadBtnText: {
+    color: '#38bdf8',
+    fontSize: 11,
+    fontWeight: '700',
+    fontFamily: 'monospace',
   },
   codeExportBodyMono: {
     color: '#94a3b8',
     fontFamily: 'monospace',
     fontSize: 10,
-    lineHeight: 15
+    lineHeight: 16,
+    backgroundColor: '#030407',
+    padding: 10,
+    borderRadius: 8,
   },
 
   // FOOTER STYLES

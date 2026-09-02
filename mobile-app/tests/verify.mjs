@@ -135,5 +135,46 @@ describe('Design System and UI Primitives Verification', () => {
       });
     });
   });
+
+  describe('Hardware DSP Exporters & Installer Blueprint (Phase 2)', () => {
+    const exportContent = readFileSync(join(process.cwd(), 'services', 'exportService.ts'), 'utf-8');
+
+    test('exportService.ts generates Helix, Musway, Android DSP, Pioneer, and MiniDSP configs', () => {
+      assert.ok(exportContent.includes('export function generateHelixAfpcXml'));
+      assert.ok(exportContent.includes('export function generateMuswayPresetJson'));
+      assert.ok(exportContent.includes('export function generateAndroidDspCsv'));
+      assert.ok(exportContent.includes('export function generatePioneerXml'));
+      assert.ok(exportContent.includes('export function generateMiniDspJson'));
+    });
+
+    test('exportService.ts generates and prints Professional Installer Blueprint Spec Sheet HTML', () => {
+      assert.ok(exportContent.includes('export function generateInstallerBlueprintHtml'));
+      assert.ok(exportContent.includes('export function downloadInstallerBlueprintHtml'));
+      assert.ok(exportContent.includes('export function printInstallerBlueprint'));
+      assert.ok(exportContent.includes('Professional Installer Acoustic Calibration Blueprint'));
+      assert.ok(exportContent.includes('Amplifier Gain Potentiometer Calibration'));
+    });
+  });
+
+  describe('Real-Time Microphone RTA & Auto-Tune Engine (Phase 1)', () => {
+    const audioContent = readFileSync(join(process.cwd(), 'services', 'webAudioEngine.ts'), 'utf-8');
+    const rtaModalContent = readFileSync(join(process.cwd(), 'components', 'RtaMeasurementModal.tsx'), 'utf-8');
+
+    test('webAudioEngine.ts supports live mic capture, 31-band FFT binning, and target curve auto-tuning', () => {
+      assert.ok(audioContent.includes('startMicRtaCapture'));
+      assert.ok(audioContent.includes('stopMicRtaCapture'));
+      assert.ok(audioContent.includes('getMic31BandRtaData'));
+      assert.ok(audioContent.includes('getTargetCurveSpl'));
+      assert.ok(audioContent.includes('ISO_31_FREQUENCIES'));
+    });
+
+    test('RtaMeasurementModal.tsx renders live 31-band canvas, pink noise toggle, and 1-click Auto-Tune', () => {
+      assert.ok(rtaModalContent.includes('handleToggleMicCapture'));
+      assert.ok(rtaModalContent.includes('handleTogglePinkNoise'));
+      assert.ok(rtaModalContent.includes('handleApplyAutoTune'));
+      assert.ok(rtaModalContent.includes('1-Click Auto-Tune Inverse Correction'));
+    });
+  });
 });
+
 

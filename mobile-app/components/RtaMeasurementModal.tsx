@@ -14,91 +14,53 @@ import {
   MeasurementPoint,
   MeasurementResponse,
 } from '@/services/tuningService';
+import { webAudioEngine, ISO_31_FREQUENCIES, Rta31BandPoint } from '@/services/webAudioEngine';
 
 interface RtaMeasurementModalProps {
   visible: boolean;
   onClose: () => void;
   carName: string;
+  targetProfile?: 'sql' | 'harman' | 'vocal';
   onApplyCuts?: (recommendedCuts: { frequency_hz: number; recommended_eq_cut_db: number }[]) => void;
+  onApplyAutoTune?: (autoTune14BandGains: number[]) => void;
 }
-
-// Standard 31-band 1/3-octave test frequencies (Hz)
-const ISO_31_FREQUENCIES = [
-  20, 25, 31.5, 40, 50, 63, 80, 100, 125, 160, 200, 250, 315, 400, 500, 630, 800,
-  1000, 1250, 1600, 2000, 2500, 3150, 4000, 5000, 6300, 8000, 10000, 12500, 16000, 20000,
-];
 
 export default function RtaMeasurementModal({
   visible,
   onClose,
   carName,
+  targetProfile = 'harman',
   onApplyCuts,
+  onApplyAutoTune,
 }: RtaMeasurementModalProps) {
   const [loading, setLoading] = useState(false);
   const [measurementResult, setMeasurementResult] = useState<MeasurementResponse | null>(null);
-  const [activeTab, setActiveTab] = useState<'simulate' | 'custom'>('simulate');
+  const [activeMode, setActiveMode] = useState<'live_mic' | 'simulate'>('live_mic');
+  const [isMicCapturing, setIsMicCapturing] = useState(false);
+  const [isPinkNoisePlaying, setIsPinkNoisePlaying] = useState(false);
+  const [liveSplPoints, setLiveSplPoints] = useState<Rta31BandPoint[]>([]);
+  const [autoTune14Gains, setAutoTune14Gains] = useState<number[]>([]);
+  const [currentAvgSpl, setCurrentAvgSpl] = useState<number>(75.0);
   const [appliedMsg, setAppliedMsg] = useState<string | null>(null);
   const canvasRef = useRef<any>(null);
+  const animationFrameRef = useRef<number | null>(null);
 
-  // Generate realistic simulated in-cabin sweep
-  const generateSimulatedData = (): MeasurementPoint[] => {
-    return ISO_31_FREQUENCIES.map((freq) => {
-      // Baseline 75 dB SPL
-      let spl = 75.0;
+  // Live Animation Loop for 31-Band FFT RTA Canvas
+  const runLiveRtaFrame = () => {
+    if (!visible) return;
 
-      // Deep bass roll-off & cabin gain
-      if (freq <= 63) {
-        spl += 6.5 + (Math.random() * 2 - 1);
-      }
-      // Cabin standing wave resonance at 200 Hz
-      else if (freq >= 160 && freq <= 250) {
-        spl += 8.2 + (Math.random() * 1.5 - 0.75);
-      }
-      // Midrange notch around 800 Hz
-      else if (freq >= 630 && freq <= 1000) {
-        spl -= 2.5 + (Math.random() * 1.5 - 0.75);
-      }
-      // Windshield glass reflection treble boost @ 4-6 kHz
-      else if (freq >= 3150 && freq <= 5000) {
-        spl += 4.5 + (Math.random() * 2 - 1);
-      }
-      // Treble roll-off
-      else if (freq >= 12500) {
-        spl -= 3.0 + (Math.random() * 1.5 - 0.75);
-      } else {
-        spl += (Math.random() * 3 - 1.5);
-      }
+    const data = webAudioEngine.getMic31BandRtaData(targetProfile);
+    setLiveSplPoints(data.points);
+    setAutoTune14Gains(data.autoTune14BandGains);
+    setCurrentAvgSpl(data.averageSplDb);
 
-      return {
-        frequency_hz: freq,
-        spl_db: +spl.toFixed(1),
-      };
-    });
+    drawRtaCanvas(data.points, targetProfile);
+
+    animationFrameRef.current = requestAnimationFrame(runLiveRtaFrame);
   };
 
-  const handleRunAcousticSweep = async () => {
-    setLoading(true);
-    setAppliedMsg(null);
-    try {
-      const raw = generateSimulatedData();
-      const res = await uploadMeasurement(raw, `${carName}_in_cabin_rta`);
-      setMeasurementResult(res);
-    } catch (e) {
-      console.warn('[RTA Modal] Error running sweep:', e);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (visible && !measurementResult) {
-      handleRunAcousticSweep();
-    }
-  }, [visible]);
-
-  // Render RTA Canvas comparing raw vs smoothed
-  useEffect(() => {
-    if (!visible || !measurementResult || Platform.OS !== 'web') return;
+  const drawRtaCanvas = (points: Rta31BandPoint[], profile: 'sql' | 'harman' | 'vocal') => {
+    if (Platform.OS !== 'web') return;
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
@@ -110,7 +72,7 @@ export default function RtaMeasurementModal({
     ctx.fillStyle = '#060a12';
     ctx.fillRect(0, 0, width, height);
 
-    // Grid lines
+    // Draw Grid Lines (dB Levels)
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
     ctx.lineWidth = 1;
     for (let y = 20; y < height; y += 30) {
@@ -120,86 +82,133 @@ export default function RtaMeasurementModal({
       ctx.stroke();
     }
 
-    const smoothed = measurementResult.smoothed_data;
-    if (!smoothed || smoothed.length < 2) return;
+    if (!points || points.length === 0) return;
 
-    const minSpl = 60;
-    const maxSpl = 95;
-    const stepX = width / (smoothed.length - 1);
+    const minSpl = 50;
+    const maxSpl = 105;
+    const numBars = points.length;
+    const barSpacing = 2;
+    const barWidth = Math.max(2, (width - (numBars * barSpacing)) / numBars);
 
-    // Draw Smoothed Spline Curve (Cyan Glow)
-    const points = smoothed.map((pt, i) => {
-      const normY = (pt.spl_db - minSpl) / (maxSpl - minSpl);
-      const y = height - normY * height;
-      return { x: i * stepX, y: Math.max(10, Math.min(height - 10, y)) };
+    // 1. Draw 31-Band Measured SPL Bars
+    points.forEach((pt, i) => {
+      const x = i * (barWidth + barSpacing) + 4;
+      const normH = Math.max(0.05, Math.min(1.0, (pt.spl - minSpl) / (maxSpl - minSpl)));
+      const barH = normH * (height - 30);
+      const y = height - 20 - barH;
+
+      // Color code by frequency band
+      let barColor = '#0284c7';
+      if (pt.freq <= 100) barColor = '#38bdf8'; // Sub-bass
+      else if (pt.freq <= 500) barColor = '#06b6d4'; // Mid-bass
+      else if (pt.freq <= 4000) barColor = '#10b981'; // Midrange
+      else barColor = '#f59e0b'; // Treble
+
+      if (pt.deltaDb < -4.0) barColor = '#ef4444'; // Resonant peak warning
+
+      ctx.fillStyle = barColor;
+      ctx.fillRect(x, y, barWidth, barH);
+
+      // Peak Hold Cap
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(x, y - 2, barWidth, 2);
     });
 
-    // Baseline target 75dB line
-    const targetY = height - ((75 - minSpl) / (maxSpl - minSpl)) * height;
-    ctx.strokeStyle = 'rgba(16, 185, 129, 0.35)';
-    ctx.setLineDash([4, 4]);
+    // 2. Draw Target Curve Reference Line (Green dashed curve)
+    ctx.strokeStyle = '#10b981';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([4, 3]);
     ctx.beginPath();
-    ctx.moveTo(0, targetY);
-    ctx.lineTo(width, targetY);
+    points.forEach((pt, i) => {
+      const x = i * (barWidth + barSpacing) + 4 + barWidth / 2;
+      const targetNormY = (pt.targetSpl - minSpl) / (maxSpl - minSpl);
+      const targetY = height - 20 - targetNormY * (height - 30);
+      if (i === 0) ctx.moveTo(x, targetY);
+      else ctx.lineTo(x, targetY);
+    });
     ctx.stroke();
     ctx.setLineDash([]);
+  };
 
-    // Curve fill
-    ctx.beginPath();
-    ctx.moveTo(points[0].x, points[0].y);
-    for (let i = 0; i < points.length - 1; i++) {
-      const cpX = (points[i].x + points[i + 1].x) / 2;
-      ctx.quadraticCurveTo(points[i].x, points[i].y, cpX, (points[i].y + points[i + 1].y) / 2);
-    }
-    ctx.lineTo(points[points.length - 1].x, points[points.length - 1].y);
-    ctx.strokeStyle = '#06b6d4';
-    ctx.lineWidth = 2.5;
-    ctx.shadowColor = '#06b6d4';
-    ctx.shadowBlur = 8;
-    ctx.stroke();
-    ctx.shadowBlur = 0;
-
-    // Fill under curve
-    ctx.lineTo(width, height);
-    ctx.lineTo(0, height);
-    ctx.closePath();
-    const grad = ctx.createLinearGradient(0, 0, 0, height);
-    grad.addColorStop(0, 'rgba(6, 182, 212, 0.20)');
-    grad.addColorStop(1, 'rgba(6, 182, 212, 0.0)');
-    ctx.fillStyle = grad;
-    ctx.fill();
-
-    // Mark detected peaks with red pulses
-    measurementResult.recommended_cuts.forEach((cut) => {
-      const idx = smoothed.findIndex((p) => p.frequency_hz === cut.frequency_hz);
-      if (idx !== -1) {
-        const pt = points[idx];
-        ctx.beginPath();
-        ctx.arc(pt.x, pt.y, 5, 0, Math.PI * 2);
-        ctx.fillStyle = '#ef4444';
-        ctx.fill();
-
-        ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 9px monospace';
-        ctx.fillText(`${cut.frequency_hz}Hz (Cut ${cut.recommended_eq_cut_db}dB)`, Math.max(5, pt.x - 30), pt.y - 10);
+  // Start / Stop Live Microphone Capture
+  const handleToggleMicCapture = async () => {
+    if (isMicCapturing) {
+      webAudioEngine.stopMicRtaCapture();
+      setIsMicCapturing(false);
+      if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
+    } else {
+      const ok = await webAudioEngine.startMicRtaCapture();
+      if (ok) {
+        setIsMicCapturing(true);
+        runLiveRtaFrame();
       }
-    });
-  }, [visible, measurementResult]);
-
-  const handleApplyToEq = () => {
-    if (measurementResult?.recommended_cuts && onApplyCuts) {
-      onApplyCuts(
-        measurementResult.recommended_cuts.map((c) => ({
-          frequency_hz: c.frequency_hz,
-          recommended_eq_cut_db: c.recommended_eq_cut_db,
-        }))
-      );
-      setAppliedMsg('Acoustic notch cuts applied to 14-band Equalizer!');
-      setTimeout(() => {
-        setAppliedMsg(null);
-      }, 2500);
     }
   };
+
+  // Toggle Pink Noise Test Tone
+  const handleTogglePinkNoise = async () => {
+    if (isPinkNoisePlaying) {
+      webAudioEngine.stopTone(true);
+      setIsPinkNoisePlaying(false);
+    } else {
+      await webAudioEngine.playTone('pink_noise');
+      setIsPinkNoisePlaying(true);
+    }
+  };
+
+  // Apply Full Auto-Tune Gains to DSP Studio
+  const handleApplyAutoTune = () => {
+    if (autoTune14Gains.length > 0 && onApplyAutoTune) {
+      onApplyAutoTune(autoTune14Gains);
+      webAudioEngine.setAllGains(autoTune14Gains);
+      setAppliedMsg('Auto-Tune calibration profile applied directly to 14-band Studio DSP!');
+      setTimeout(() => setAppliedMsg(null), 3500);
+    }
+  };
+
+  // Generate simulated sweep for backend upload
+  const handleRunSimulatedSweep = async () => {
+    setLoading(true);
+    setAppliedMsg(null);
+    try {
+      const raw = ISO_31_FREQUENCIES.map((freq) => {
+        let spl = 75.0;
+        if (freq <= 63) spl += 6.5 + (Math.random() * 2 - 1);
+        else if (freq >= 160 && freq <= 250) spl += 8.2 + (Math.random() * 1.5 - 0.75);
+        else if (freq >= 630 && freq <= 1000) spl -= 2.5 + (Math.random() * 1.5 - 0.75);
+        else if (freq >= 3150 && freq <= 5000) spl += 4.5 + (Math.random() * 2 - 1);
+        else if (freq >= 12500) spl -= 3.0 + (Math.random() * 1.5 - 0.75);
+        else spl += (Math.random() * 3 - 1.5);
+        return { frequency_hz: freq, spl_db: +spl.toFixed(1) };
+      });
+      const res = await uploadMeasurement(raw, `${carName}_in_cabin_rta`);
+      setMeasurementResult(res);
+    } catch (e) {
+      console.warn('[RTA Modal] Error running sweep:', e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (visible) {
+      if (activeMode === 'live_mic') {
+        handleToggleMicCapture();
+      }
+    } else {
+      if (isMicCapturing) webAudioEngine.stopMicRtaCapture();
+      if (isPinkNoisePlaying) webAudioEngine.stopTone(true);
+      if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
+      setIsMicCapturing(false);
+      setIsPinkNoisePlaying(false);
+    }
+
+    return () => {
+      if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
+      webAudioEngine.stopMicRtaCapture();
+      webAudioEngine.stopTone(true);
+    };
+  }, [visible]);
 
   return (
     <Modal
@@ -214,11 +223,14 @@ export default function RtaMeasurementModal({
           <View style={styles.modalHeader}>
             <View>
               <View style={styles.headerTitleRow}>
-                <View style={styles.cyanDot} />
-                <Text style={styles.modalTitle}>RTA In-Cabin Acoustic Analysis</Text>
+                <View style={[styles.cyanDot, isMicCapturing && styles.cyanDotActive]} />
+                <Text style={styles.modalTitle}>RTA In-Cabin Real-Time Acoustic Calibration</Text>
+                <View style={styles.liveBadge}>
+                  <Text style={styles.liveBadgeText}>{isMicCapturing ? '● LIVE MIC ACTIVE' : 'STANDBY'}</Text>
+                </View>
               </View>
               <Text style={styles.modalSub}>
-                1/3-octave frequency response smoothing and standing wave resonance notch detection for {carName}
+                31-Band 1/3-octave FFT cabin measurement & automated parametric equalizer correction for {carName}
               </Text>
             </View>
             <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
@@ -227,19 +239,43 @@ export default function RtaMeasurementModal({
           </View>
 
           <ScrollView style={styles.scrollArea} showsVerticalScrollIndicator={false}>
-            {/* Action Bar */}
-            <View style={styles.actionBar}>
+            {/* Live Controller Bar */}
+            <View style={styles.controllerBar}>
               <TouchableOpacity
-                style={styles.runSweepBtn}
-                onPress={handleRunAcousticSweep}
-                disabled={loading}
+                style={[styles.ctrlBtn, isMicCapturing && styles.ctrlBtnActive]}
+                onPress={handleToggleMicCapture}
               >
-                {loading ? (
-                  <ActivityIndicator color="#020617" />
-                ) : (
-                  <Text style={styles.runSweepBtnText}>🎙️ Run Live Acoustic Mic Sweep (31-Band)</Text>
-                )}
+                <Text style={styles.ctrlBtnText}>
+                  {isMicCapturing ? '⏹️ Stop Microphone Capture' : '🎙️ Start In-Cabin Mic Stream'}
+                </Text>
               </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.ctrlBtnPink, isPinkNoisePlaying && styles.ctrlBtnPinkActive]}
+                onPress={handleTogglePinkNoise}
+              >
+                <Text style={styles.ctrlBtnPinkText}>
+                  {isPinkNoisePlaying ? '🔇 Mute Pink Noise' : '🔊 Play Pink Noise Sweep'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* SPL Metric Cards */}
+            <View style={styles.splReadoutRow}>
+              <View style={styles.splMetricCard}>
+                <Text style={styles.splMetricLabel}>AVG CABIN LEVEL</Text>
+                <Text style={styles.splMetricVal}>{currentAvgSpl} <Text style={styles.splUnit}>dB SPL</Text></Text>
+              </View>
+              <View style={styles.splMetricCard}>
+                <Text style={styles.splMetricLabel}>TARGET HOUSE CURVE</Text>
+                <Text style={styles.splMetricVal}>{targetProfile.toUpperCase()} <Text style={styles.splUnit}>75 dB Ref</Text></Text>
+              </View>
+              <View style={styles.splMetricCard}>
+                <Text style={styles.splMetricLabel}>AUTO-TUNE STATUS</Text>
+                <Text style={[styles.splMetricVal, { color: '#10b981' }]}>
+                  {autoTune14Gains.length > 0 ? 'READY TO APPLY' : 'CALCULATING'}
+                </Text>
+              </View>
             </View>
 
             {appliedMsg && (
@@ -248,21 +284,21 @@ export default function RtaMeasurementModal({
               </View>
             )}
 
-            {/* RTA Response Canvas */}
+            {/* 31-Band RTA Canvas */}
             {Platform.OS === 'web' && (
               <View style={styles.canvasContainer}>
                 <View style={styles.canvasLegendRow}>
                   <View style={styles.legendItem}>
-                    <View style={[styles.legendDot, { backgroundColor: '#06b6d4' }]} />
-                    <Text style={styles.legendText}>Smoothed SPL Response (dB)</Text>
+                    <View style={[styles.legendDot, { backgroundColor: '#38bdf8' }]} />
+                    <Text style={styles.legendText}>Measured In-Cabin FFT (31-Band)</Text>
                   </View>
                   <View style={styles.legendItem}>
                     <View style={[styles.legendDot, { backgroundColor: '#10b981' }]} />
-                    <Text style={styles.legendText}>Harman Target (75dB)</Text>
+                    <Text style={styles.legendText}>Target House Curve</Text>
                   </View>
                   <View style={styles.legendItem}>
                     <View style={[styles.legendDot, { backgroundColor: '#ef4444' }]} />
-                    <Text style={styles.legendText}>Detected Resonances</Text>
+                    <Text style={styles.legendText}>Resonance Peak (&gt;4dB)</Text>
                   </View>
                 </View>
 
@@ -275,43 +311,39 @@ export default function RtaMeasurementModal({
               </View>
             )}
 
-            {/* Resonance Findings & Recommended Cuts */}
-            {measurementResult && (
-              <View style={styles.findingsBox}>
-                <Text style={styles.findingsTitle}>
-                  🔍 Detected In-Cabin Standing Wave Resonances:
+            {/* Auto-Tune Action Block */}
+            <View style={styles.autoTuneActionCard}>
+              <View style={styles.autoTuneInfo}>
+                <Text style={styles.autoTuneTitle}>⚡ 1-Click Auto-Tune Inverse Correction</Text>
+                <Text style={styles.autoTuneSub}>
+                  Computes exact inverse delta gains for 14 ISO studio EQ bands to align vehicle cabin to Harman target curve.
                 </Text>
-
-                {measurementResult.recommended_cuts.length > 0 ? (
-                  <View style={styles.cutsList}>
-                    {measurementResult.recommended_cuts.map((cut, idx) => (
-                      <View key={idx} style={styles.cutCard}>
-                        <View style={styles.cutHeader}>
-                          <Text style={styles.cutFreq}>{cut.frequency_hz} Hz</Text>
-                          <Text style={styles.cutDb}>{cut.recommended_eq_cut_db} dB Cut</Text>
-                        </View>
-                        <Text style={styles.cutRationale}>{cut.rationale}</Text>
-                      </View>
-                    ))}
-                  </View>
-                ) : (
-                  <Text style={styles.noPeaksText}>
-                    No excessive standing wave peaks detected (&gt;3dB above baseline).
-                  </Text>
-                )}
-
-                {measurementResult.recommended_cuts.length > 0 && (
-                  <TouchableOpacity
-                    style={styles.applyBtn}
-                    onPress={handleApplyToEq}
-                  >
-                    <Text style={styles.applyBtnText}>
-                      ⚡ Apply Recommended Notch Cuts to Equalizer
-                    </Text>
-                  </TouchableOpacity>
-                )}
               </View>
-            )}
+              <TouchableOpacity
+                style={styles.autoTuneApplyBtn}
+                onPress={handleApplyAutoTune}
+              >
+                <Text style={styles.autoTuneApplyBtnText}>Apply Auto-Tune to Studio DSP →</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* 14-Band Delta Table Preview */}
+            <View style={styles.deltaPreviewBox}>
+              <Text style={styles.deltaPreviewTitle}>14-Band Auto-Tune Corrective Gains (dB):</Text>
+              <View style={styles.deltaChipsGrid}>
+                {[32, 63, 100, 200, 400, 630, 1000, 2000, 4000, 8000, 10000, 12000, 14000, 16000].map((freq, idx) => {
+                  const gain = autoTune14Gains[idx] || 0.0;
+                  return (
+                    <View key={freq} style={styles.deltaChip}>
+                      <Text style={styles.deltaChipFreq}>{freq >= 1000 ? `${freq / 1000}k` : freq}</Text>
+                      <Text style={[styles.deltaChipGain, gain > 0 ? styles.gainPlus : (gain < 0 ? styles.gainMinus : null)]}>
+                        {gain > 0 ? `+${gain}` : gain} dB
+                      </Text>
+                    </View>
+                  );
+                })}
+              </View>
+            </View>
           </ScrollView>
         </View>
       </View>
@@ -381,19 +413,102 @@ const styles = StyleSheet.create({
   scrollArea: {
     flexGrow: 0,
   },
-  actionBar: {
-    marginBottom: 12,
+  cyanDotActive: {
+    backgroundColor: '#ef4444',
+    shadowColor: '#ef4444',
+    shadowOpacity: 0.8,
+    shadowRadius: 6,
   },
-  runSweepBtn: {
-    backgroundColor: '#06b6d4',
-    paddingVertical: 12,
+  liveBadge: {
+    backgroundColor: '#1e293b',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: '#334155',
+  },
+  liveBadgeText: {
+    color: '#38bdf8',
+    fontSize: 9,
+    fontFamily: 'monospace',
+    fontWeight: 'bold',
+  },
+  controllerBar: {
+    flexDirection: 'row',
+    gap: 10,
+    marginBottom: 14,
+    flexWrap: 'wrap',
+  },
+  ctrlBtn: {
+    flex: 1,
+    minWidth: 180,
+    backgroundColor: '#0284c7',
+    paddingVertical: 10,
+    paddingHorizontal: 14,
     borderRadius: 8,
     alignItems: 'center',
+    justifyContent: 'center',
   },
-  runSweepBtnText: {
-    color: '#020617',
-    fontSize: 13,
+  ctrlBtnActive: {
+    backgroundColor: '#dc2626',
+  },
+  ctrlBtnText: {
+    color: '#ffffff',
+    fontSize: 12,
     fontWeight: 'bold',
+  },
+  ctrlBtnPink: {
+    flex: 1,
+    minWidth: 160,
+    backgroundColor: '#1e293b',
+    borderWidth: 1,
+    borderColor: '#f43f5e',
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  ctrlBtnPinkActive: {
+    backgroundColor: '#f43f5e',
+  },
+  ctrlBtnPinkText: {
+    color: '#ffffff',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  splReadoutRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginBottom: 14,
+    flexWrap: 'wrap',
+  },
+  splMetricCard: {
+    flex: 1,
+    minWidth: 140,
+    backgroundColor: '#070d18',
+    padding: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#1e293b',
+  },
+  splMetricLabel: {
+    color: '#64748b',
+    fontSize: 9,
+    fontFamily: 'monospace',
+    fontWeight: 'bold',
+    marginBottom: 2,
+  },
+  splMetricVal: {
+    color: '#ffffff',
+    fontSize: 14,
+    fontWeight: 'bold',
+    fontFamily: 'monospace',
+  },
+  splUnit: {
+    fontSize: 10,
+    color: '#94a3b8',
+    fontWeight: 'normal',
   },
   alertSuccess: {
     backgroundColor: 'rgba(16, 185, 129, 0.15)',
@@ -411,7 +526,7 @@ const styles = StyleSheet.create({
   canvasContainer: {
     backgroundColor: '#070d18',
     borderRadius: 10,
-    padding: 10,
+    padding: 12,
     borderWidth: 1,
     borderColor: '#1e293b',
     marginBottom: 14,
@@ -419,9 +534,10 @@ const styles = StyleSheet.create({
   },
   canvasLegendRow: {
     flexDirection: 'row',
-    gap: 12,
-    marginBottom: 8,
+    gap: 14,
+    marginBottom: 10,
     alignSelf: 'flex-start',
+    flexWrap: 'wrap',
   },
   legendItem: {
     flexDirection: 'row',
@@ -437,64 +553,92 @@ const styles = StyleSheet.create({
     color: '#94a3b8',
     fontSize: 10,
   },
-  findingsBox: {
-    backgroundColor: '#070d18',
-    borderRadius: 10,
-    padding: 14,
+  autoTuneActionCard: {
+    backgroundColor: '#0c1a2e',
     borderWidth: 1,
-    borderColor: '#1e293b',
+    borderColor: '#0284c7',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 14,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 12,
   },
-  findingsTitle: {
+  autoTuneInfo: {
+    flex: 1,
+    minWidth: 240,
+  },
+  autoTuneTitle: {
     color: '#38bdf8',
     fontSize: 13,
     fontWeight: 'bold',
-    marginBottom: 10,
+    marginBottom: 4,
   },
-  cutsList: {
-    gap: 8,
-    marginBottom: 14,
-  },
-  cutCard: {
-    backgroundColor: '#0a101f',
-    padding: 10,
-    borderRadius: 8,
-    borderLeftWidth: 3,
-    borderLeftColor: '#ef4444',
-  },
-  cutHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 2,
-  },
-  cutFreq: {
-    color: '#ffffff',
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
-  cutDb: {
-    color: '#ef4444',
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
-  cutRationale: {
+  autoTuneSub: {
     color: '#94a3b8',
     fontSize: 11,
+    lineHeight: 15,
   },
-  noPeaksText: {
-    color: '#10b981',
-    fontSize: 12,
-  },
-  applyBtn: {
-    backgroundColor: '#1e293b',
-    borderWidth: 1,
-    borderColor: '#06b6d4',
+  autoTuneApplyBtn: {
+    backgroundColor: '#38bdf8',
     paddingVertical: 10,
+    paddingHorizontal: 16,
     borderRadius: 8,
     alignItems: 'center',
+    justifyContent: 'center',
   },
-  applyBtnText: {
-    color: '#38bdf8',
+  autoTuneApplyBtnText: {
+    color: '#020617',
     fontSize: 12,
     fontWeight: 'bold',
+  },
+  deltaPreviewBox: {
+    backgroundColor: '#070d18',
+    borderRadius: 10,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#1e293b',
+    marginBottom: 10,
+  },
+  deltaPreviewTitle: {
+    color: '#94a3b8',
+    fontSize: 11,
+    fontWeight: 'bold',
+    marginBottom: 8,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  deltaChipsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  deltaChip: {
+    backgroundColor: '#0f172a',
+    borderWidth: 1,
+    borderColor: '#334155',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    alignItems: 'center',
+  },
+  deltaChipFreq: {
+    color: '#64748b',
+    fontSize: 8,
+    fontFamily: 'monospace',
+  },
+  deltaChipGain: {
+    color: '#cbd5e1',
+    fontSize: 10,
+    fontFamily: 'monospace',
+    fontWeight: 'bold',
+  },
+  gainPlus: {
+    color: '#38bdf8',
+  },
+  gainMinus: {
+    color: '#f43f5e',
   },
 });
